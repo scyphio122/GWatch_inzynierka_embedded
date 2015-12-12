@@ -1,12 +1,11 @@
 #include "nrf51.h"
 #include "nrf51_bitfields.h"
 #include "timer.h"
-#include "interface.h"
 #include "nrf_soc.h"
 #include "nrf_gpio.h"
-#include "nrf_soc.h"
 
-volatile char timer_delay_completed = FALSE;
+
+volatile char timer_delay_completed = 0;
 volatile char timer_overflow = 0;
 volatile char timer_timeout_flag = 0;
 /**
@@ -57,7 +56,7 @@ void Timer_Delay(uint16_t delay_us)
 	//	Start the timer
 	NRF_TIMER1->TASKS_START = 1;
 	//	Wait for the demanded amount of time
-	while(timer_delay_completed == FALSE)
+	while(timer_delay_completed == 0)
 	{
 		__WFE();
 	}
@@ -67,7 +66,7 @@ void Timer_Delay(uint16_t delay_us)
 	//	Disable the CC[0] interrupt 
 	NRF_TIMER1->INTENCLR = TIMER_INTENSET_COMPARE0_Msk;
 	//	Clear the wait flag
-	timer_delay_completed = FALSE;
+	timer_delay_completed = 0;
 }
 
 void Timer_Timeout(uint32_t ticks)

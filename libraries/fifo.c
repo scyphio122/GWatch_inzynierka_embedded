@@ -16,10 +16,7 @@
  */
 void Fifo_Init(app_fifo_t* fifo, uint8_t* buf, uint16_t buf_size)
 {
-	fifo->read_pos = 0;
-	fifo->write_pos = 0;
-	fifo->p_buf = buf;
-	fifo->buf_size_mask = buf_size;
+	app_fifo_init(fifo, buf, buf_size);
 }
 
 /**

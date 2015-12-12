@@ -10,6 +10,7 @@ RM := rm -rf
 -include sources.mk
 -include libraries/subdir.mk
 -include hardware/subdir.mk
+-include fifo/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -42,7 +43,7 @@ all: GWatch.elf secondary-outputs
 GWatch.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C Linker'
-	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections  -g3 -Xlinker --gc-sections -L"D:\Eclipse_workspace\packs_short/Softdevice_S110" -L"D:\Eclipse_workspace\packs_short" -Wl,-Map,"GWatch.map" -o "GWatch.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections  -g3 -T "D:\Eclipse_workspace\packs_short/Softdevice_S110/armgcc_s110_nrf51422_xxaa.ld" -Xlinker --gc-sections -L"D:\Eclipse_workspace\packs_short/Softdevice_S110" -L"D:\Eclipse_workspace\packs_short" -L"D:\Eclipse_workspace\packs_short/nRF_Libraries" -L"D:\Eclipse_workspace\packs_short/nRF_Drivers" -L"D:\Eclipse_workspace\packs_short/nRF_BLE" -Wl,-Map,"GWatch.map" -o "GWatch.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

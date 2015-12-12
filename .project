@@ -23,4 +23,11 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>fifo</name>
+			<type>2</type>
+			<location>D:/Eclipse_workspace/Packages/NordicSemiconductor/nRF_Libraries/3.0.1/fifo</location>
+		</link>
+	</linkedResources>
 </projectDescription>

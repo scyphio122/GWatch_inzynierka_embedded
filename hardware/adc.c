@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include "nrf_soc.h"
 #include <sys/_stdint.h>
-
+#include "RTC.h"
 
 static uint8_t*		vdd_voltage;
 bat_voltage_t		bat_voltage;							/**< Struct which contains information about battery voltage in some key moments of device timeline */
