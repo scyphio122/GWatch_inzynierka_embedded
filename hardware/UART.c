@@ -4,16 +4,23 @@
  *  Created on: 10 gru 2015
  *      Author: Konrad
  */
-#include "UART.h"
-#include "hardware_settings.h"
-#include "nrf_gpio.h"
-#include "app_fifo.h"
 
-static app_fifo_t 		uart_rx_fifo;
-static uint8_t 			uart_fifo_buffer[UART_FIFO_SIZE];
+//#include <core_cmInstr.h>
+#include <libraries/fifo.h>
+#include <hardware_settings.h>
+#include <nrf_gpio.h>
+#include <nrf51.h>
+#include <nrf51_bitfields.h>
+#include <RTC.h>
+#include <stdbool.h>
+#include <sys/_stdint.h>
+#include <UART.h>
+
+
+app_fifo_t 				uart_rx_fifo;
+uint8_t 				uart_fifo_buffer[UART_FIFO_SIZE];
 
 static uint8_t* 		tx_buffer;
-static uint8_t* 		rx_buffer;
 static uint16_t			tx_byte_counter;
 static uint16_t 		tx_byte_counter;
 static uint16_t 		tx_data_size;
@@ -21,16 +28,18 @@ static volatile uint8_t	uart_tx_transmission_in_progress;
 
 void UART0_IRQHandler()
 {
+	static uint8_t data_byte = 0;
 	if(NRF_UART0->EVENTS_RXDRDY)
 	{
 		///	Clear the rx interrupt flag
 		NRF_UART0->EVENTS_RXDRDY = 0;
-		register uint8_t data_byte = NRF_UART0->RXD;
+		data_byte = NRF_UART0->RXD;
 		///	Put the data byte in the fifo
 		app_fifo_put(&uart_rx_fifo, data_byte);
 
 		if(data_byte == '\r')
 		{
+
 
 		}
 	}
@@ -70,10 +79,10 @@ void UART_Init()
 	/// Disable the parity check
 	NRF_UART0->CONFIG = 0;
 	///	Configure the baudrate
-	NRF_UART0->BAUDRATE = UART_BAUDRATE_BAUDRATE_Baud4800;
+	NRF_UART0->BAUDRATE = UART_BAUDRATE_BAUDRATE_Baud9600;
 
 	/// Initialize the UART fifo
-	Fifo_Init(uart_rx_fifo, uart_fifo_buffer, sizeof(uart_fifo_buffer));
+	Fifo_Init(&uart_rx_fifo, uart_fifo_buffer, sizeof(uart_fifo_buffer));
 
 }
 
@@ -158,6 +167,15 @@ void UART_Wait_For_Transmission_End()
 {
 	while(uart_tx_transmission_in_progress)
 	{
-		__WFE();
+		///__WFE();
 	}
+}
+
+/**
+ * \brief This function changes baudrate to the given one
+ * \param baudrate - the UART_BAUDRATE_Baud... macro from nrf51.h module
+ */
+void UART_Change_Baudrate(uint32_t baudrate)
+{
+	NRF_UART0->BAUDRATE = baudrate;
 }

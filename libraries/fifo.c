@@ -7,6 +7,14 @@
 #include "app_fifo.h"
 #include "fifo.h"
 
+
+uint32_t fifo_length(app_fifo_t * p_fifo)
+{
+  uint32_t tmp = p_fifo->read_pos;
+  return p_fifo->write_pos - tmp;
+}
+
+
 /**
  * This function initializes the fifo - sets the buffer, it's size and initializes the read and write inices
  *

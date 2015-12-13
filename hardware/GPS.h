@@ -8,6 +8,7 @@
 #ifndef HARDWARE_GPS_H_
 #define HARDWARE_GPS_H_
 
+
 void GPS_Init();
 void GPS_Turn_On();
 void GPS_Turn_Off();

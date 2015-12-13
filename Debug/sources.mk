@@ -17,8 +17,11 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-fifo \
 . \
 hardware \
 libraries \
+nordic/ble \
+nordic/drivers \
+nordic/libraries \
+nordic/softdevice \
 

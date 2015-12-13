@@ -89,9 +89,6 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.925139832" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/Softdevice_S110&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Drivers&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_BLE&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.586221111" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
 									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/Softdevice_S110/armgcc_s110_nrf51422_xxaa.ld&quot;"/>
@@ -120,7 +117,6 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="fifo" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="fifo"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
