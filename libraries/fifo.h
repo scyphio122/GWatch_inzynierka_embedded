@@ -13,8 +13,10 @@
 
 #define FIFO_LENGTH fifo_length(p_fifo)  /**< Macro for calculating the FIFO length. */
 
-uint32_t fifo_length(app_fifo_t * p_fifo);
-void Fifo_Init(app_fifo_t* fifo, uint8_t* buf, uint16_t buf_size);
-void Fifo_Clear(app_fifo_t* fifo);
+uint32_t 	fifo_length(app_fifo_t * p_fifo);
+void	 	Fifo_Init(app_fifo_t* fifo, uint8_t* buf, uint16_t buf_size);
+void 		Fifo_Clear(app_fifo_t* fifo);
+void 		Fifo_Get(app_fifo_t* fifo, uint8_t* byte);
+void 		Fifo_Put(app_fifo_t* fifo, uint8_t byte);
 
 #endif /* LIBRARIES_FIFO_H_ */

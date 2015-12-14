@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <sys/_stdint.h>
 #include <UART.h>
-
+#include "GPS.h"
 
 app_fifo_t 				uart_rx_fifo;
 uint8_t 				uart_fifo_buffer[UART_FIFO_SIZE];
@@ -37,12 +37,19 @@ void UART0_IRQHandler()
 		///	Put the data byte in the fifo
 		app_fifo_put(&uart_rx_fifo, data_byte);
 
-		if(data_byte == '\r')
+
+		if(data_byte == '\n')
 		{
+			gps_msg_size = gps_msg_byte_index;
+			gps_msg_byte_index = 0;
+			gps_msg_received = 1;
 
-
+			GPS_Parse_Message();
 		}
+		else
+			++gps_msg_byte_index;
 	}
+
 	if(NRF_UART0->EVENTS_TXDRDY)
 	{
 		///	Clear the interrupt flag

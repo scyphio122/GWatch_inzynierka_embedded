@@ -37,6 +37,14 @@ typedef struct
 	uint8_t  second;
 }date_t;
 
+typedef struct
+{
+	uint8_t hour;
+	uint8_t min;
+	uint8_t sec;
+	uint16_t msec;
+}utc_time_t;
+
 extern volatile uint8_t  timeout_flag;
 
 
