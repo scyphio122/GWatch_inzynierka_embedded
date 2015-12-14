@@ -70,7 +70,7 @@ void UART_Init()
 {
 	/// Configure pins
 	nrf_gpio_cfg_output(UART_TX_PIN);
-	nrf_gpio_cfg_input(UART_RX_PIN, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(UART_RX_PIN, NRF_GPIO_PIN_NOPULL);
 	NRF_GPIO->OUTSET = 1 << UART_TX_PIN;
 
 	NRF_UART0->PSELRXD = UART_RX_PIN;
@@ -175,7 +175,7 @@ void UART_Wait_For_Transmission_End()
  * \brief This function changes baudrate to the given one
  * \param baudrate - the UART_BAUDRATE_Baud... macro from nrf51.h module
  */
-void UART_Change_Baudrate(uint32_t baudrate)
+inline void UART_Change_Baudrate(uint32_t baudrate)
 {
 	NRF_UART0->BAUDRATE = baudrate;
 }

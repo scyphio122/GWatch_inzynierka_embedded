@@ -37,3 +37,25 @@ inline void Fifo_Clear(app_fifo_t* fifo)
 	fifo->read_pos = 0;
 	fifo->write_pos = 0;
 }
+
+/**
+ * \brief This function retrieves the byte of data from the fifo
+ *
+ * \param fifo - the fifo from which the byte is to be extracted
+ * \param byte - pointer to the single byte buffer
+ */
+inline void Fifo_Get(app_fifo_t* fifo, uint8_t* byte)
+{
+	app_fifo_get(fifo, byte);
+}
+
+/**
+ * \brief Put the byte in the fifo
+ *
+ * \param fifo - the FIFO where the byte is to be put
+ * \param byte - the byte to be put
+ */
+inline void Fifo_Put(app_fifo_t* fifo, uint8_t byte)
+{
+	app_fifo_put(fifo, byte);
+}

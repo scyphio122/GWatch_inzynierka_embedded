@@ -8,6 +8,10 @@
 #include "GPS.h"
 #include "nrf_gpio.h"
 #include "hardware_settings.h"
+#include "fifo.h"
+
+
+const gps_msg_header_t gps_msg_header;
 
 /**
  * This function initializes the GPS pins
@@ -30,6 +34,7 @@ void GPS_Init()
 
 	///	RTCM is not enabled by default
 	nrf_gpio_cfg_input(GPS_RTCM_PIN, NRF_GPIO_PIN_NOPULL);
+
 }
 
 
@@ -63,8 +68,84 @@ void GPS_Reset()
 	NRF_GPIO->OUTSET = 1 << GPS_RESET_PIN;
 }
 
-void GPS_Parse_Data()
+/**
+ * This function checks the received gps message header with the known patterns.
+ *
+ * \return  *Enum which describes the result pattern
+ * 			*UNKNOWN_MSG_HEADER - if message header not recognised
+ */
+static gps_msg_header_e GPS_Get_Message_Type()
 {
+	uint8_t msg_header[6];
+
+	for(uint8_t i=0; i<sizeof(msg_header); i++)
+	{
+		msg_header[i] = Fifo_Get(uart_rx_fifo);
+	}
+
+	uint32_t ret_val = memcmp(msg_header, gps_msg_header.time_pos_fix);
+	if(ret_val == 0)
+		return TIME_POS_FIX_MSG;
+
+	uint32_t ret_val = memcmp(msg_header, gps_msg_header.sats_in_view);
+	if(ret_val == 0)
+		return SATS_IN_VIEW;
+
+	uint32_t ret_val = memcmp(msg_header, gps_msg_header.min_navi_data);
+	if(ret_val == 0)
+		return MIN_NAVI_DATA;
+
+	uint32_t ret_val = memcmp(msg_header, gps_msg_header.dop_active_sat);
+	if(ret_val == 0)
+		return DOP_AND_ACTIVE_SATS;
+
+	uint32_t ret_val = memcmp(msg_header, gps_msg_header.course_speed);
+	if(ret_val == 0)
+		return COURSE_AND_SPEED;
+
+	uint32_t ret_val = memcmp(msg_header, gps_msg_header.ant_advisor);
+	if(ret_val == 0)
+		return ANT_ADVISOR;
+
+
+	return UNKNOWN_HEADER;
+}
+
+
+
+void GPS_Parse_Message()
+{
+	switch(GPS_Get_Message_Type());
+	{
+	case TIME_POS_FIX_MSG:
+
+		break;
+
+	case MIN_NAVI_DATA:
+
+		break;
+
+	case SATS_IN_VIEW:
+
+		break;
+
+	case DOP_AND_ACTIVE_SATS:
+
+		break;
+
+	case COURSE_AND_SPEED:
+
+		break;
+
+	case ANT_ADVISOR:
+
+		break;
+
+	case UNKNOWN_HEADER:
+
+		break;
+
+	}
 
 }
 

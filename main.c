@@ -18,10 +18,12 @@
 
 int main()
 {
+	NVIC_SetPriority(UART0_IRQn, 0);
+	NVIC_EnableIRQ(UART0_IRQn);
+
 	RTC_Config();
 	UART_Init();
 	GPS_Init();
-	Fifo_Init(&uart_rx_fifo, uart_fifo_buffer, sizeof(uart_fifo_buffer));
 
 	UART_Enable();
 	UART_Start_Rx();
