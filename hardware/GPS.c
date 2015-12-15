@@ -117,6 +117,7 @@ static gps_msg_header_e GPS_Get_Message_Type()
 	return UNKNOWN_HEADER;
 }
 
+__attribute__((optimize("O1")))
 uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 {
 	uint8_t message_length = gps_msg_size;
@@ -130,7 +131,7 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 	}
 
 	temp_index = 0;
-	message_length = gps_msg_size - 6;	///	size minus msg header size
+	message_length = gps_msg_size -8;	///	size minus msg header size and /r /n characters
 	do
 	{
 		///	If it is the separator, then continue
@@ -145,12 +146,11 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 		{
 		case 0:	///	TIME
 		{
-
 			msg->utc_time.hour = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
 			msg->utc_time.min  = msg_copy[temp_index+2] + (msg_copy[temp_index+3] << 8);
 			msg->utc_time.sec  = msg_copy[temp_index+4] + (msg_copy[temp_index+5] << 8);
-			msg->utc_time.msec = msg_copy[temp_index+7] + (msg_copy[temp_index+8] << 8) + (msg_copy[temp_index + 9] << 16) + (msg_copy[temp_index + 10] << 24);;
-			temp_index = temp_index + 11;
+			msg->utc_time.msec = msg_copy[temp_index+7] + (msg_copy[temp_index+8] << 8) + (msg_copy[temp_index + 9] << 16);
+			temp_index = temp_index + 10;
 			break;
 		}
 		case 1:	///	Latitude
@@ -197,19 +197,28 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 			msg->altitude_unit = msg_copy[temp_index++];
 			break;
 
-		case 10: /// Age of diff coor
+		case 10:
+			msg->geoidal_separation = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index+2] << 16) + (msg_copy[temp_index+3] << 24);
+			temp_index += 4;
+			break;
+
+		case 11:
+			msg->geoidal_separ_units = msg_copy[temp_index++];
+			break;
+
+		case 12: /// Age of diff coor
 			msg->age_of_diff_corr = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index + 2] << 16) + (msg_copy[temp_index + 3] << 24);
 			temp_index += 4;
 			break;
 
-		case 11: /// Checksum
-			temp_index++;		///	'*' character
+		case 13: /// Checksum
+			++temp_index;
 			msg->checksum = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
 			temp_index += 2;
+			break;
 		}
 
-	}while(temp_index < gps_msg_size);
-
+	}while(temp_index < message_length);
 	return NRF_SUCCESS;
 }
 

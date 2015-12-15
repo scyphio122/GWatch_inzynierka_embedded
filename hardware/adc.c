@@ -8,7 +8,6 @@
 #include "RTC.h"
 
 static uint8_t*		vdd_voltage;
-bat_voltage_t		bat_voltage;							/**< Struct which contains information about battery voltage in some key moments of device timeline */
 volatile uint8_t   	adc_conversion_in_progress = 0;
 
 /**
@@ -52,7 +51,7 @@ void ADC_Init()
 *	\parem voltage_buffer - the pointer to the buffer where the converted voltage will be stored
 **/
 
-void ADC_Start_Bat_Volt_Conversion(uint8_t* buffer)
+void ADC_Get_Bat_Voltage(uint8_t* buffer)
 {
 	vdd_voltage = buffer;
 	///	Enable the Conversion End interrupt

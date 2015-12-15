@@ -10,6 +10,7 @@ C_SRCS += \
 ../hardware/UART.c \
 ../hardware/WATCHDOG.c \
 ../hardware/adc.c \
+../hardware/display.c \
 ../hardware/spi.c \
 ../hardware/timer.c 
 
@@ -20,6 +21,7 @@ OBJS += \
 ./hardware/UART.o \
 ./hardware/WATCHDOG.o \
 ./hardware/adc.o \
+./hardware/display.o \
 ./hardware/spi.o \
 ./hardware/timer.o 
 
@@ -30,6 +32,7 @@ C_DEPS += \
 ./hardware/UART.d \
 ./hardware/WATCHDOG.d \
 ./hardware/adc.d \
+./hardware/display.d \
 ./hardware/spi.d \
 ./hardware/timer.d 
 

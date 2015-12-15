@@ -44,7 +44,7 @@ typedef struct
 	uint8_t			horizontal_dilution_of_precision[4];
 	uint8_t			altitude[4];
 	uint8_t			altitude_unit;
-	uint8_t			geoidal_separation[4];
+	uint32_t		geoidal_separation;
 	uint8_t			geoidal_separ_units;
 	uint8_t			age_of_diff_corr;
 	uint16_t		checksum;
