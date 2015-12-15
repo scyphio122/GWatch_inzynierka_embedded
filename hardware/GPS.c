@@ -137,26 +137,26 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 		if(msg_copy[temp_index] == ',')
 		{
 			temp_index++;
+			currently_parsed_field_ind++;
 			continue;
 		}
-		currently_parsed_field_ind++;
+
 		switch(currently_parsed_field_ind)
 		{
 		case 0:	///	TIME
 		{
-			uint16_t* temp = ((uint16_t*)&msg_copy[temp_index]);
-			uint16_t data = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);//*temp;
-			msg->utc_time.hour = *temp;
-			msg->utc_time.min  = *(uint16_t*)&msg_copy[temp_index+2];
-			msg->utc_time.sec  = *(uint16_t*)&msg_copy[temp_index+4];
-			msg->utc_time.msec = *(uint32_t*)&msg_copy[temp_index+7];
-			temp_index = temp_index + 10;
+
+			msg->utc_time.hour = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
+			msg->utc_time.min  = msg_copy[temp_index+2] + (msg_copy[temp_index+3] << 8);
+			msg->utc_time.sec  = msg_copy[temp_index+4] + (msg_copy[temp_index+5] << 8);
+			msg->utc_time.msec = msg_copy[temp_index+7] + (msg_copy[temp_index+8] << 8) + (msg_copy[temp_index + 9] << 16) + (msg_copy[temp_index + 10] << 24);;
+			temp_index = temp_index + 11;
 			break;
 		}
 		case 1:	///	Latitude
-			msg->latitude.deg = *(uint16_t*)&msg_copy[temp_index];
-			msg->latitude.min_int = *(uint16_t*)&msg_copy[temp_index+2];
-			msg->latitude.min_fract = *(uint32_t*)&msg_copy[temp_index+5];
+			msg->latitude.deg = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
+			msg->latitude.min_int = msg_copy[temp_index+2] + (msg_copy[temp_index+3] << 8);
+			msg->latitude.min_fract = msg_copy[temp_index+5] + (msg_copy[temp_index+6] << 8) + (msg_copy[temp_index + 7] << 16) + (msg_copy[temp_index + 8] << 24);
 			temp_index += 9;
 			break;
 
@@ -165,9 +165,9 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 			break;
 
 		case 3:	/// Longtitude
-			msg->longtitude.deg = *(uint16_t*)&msg_copy[temp_index];
-			msg->longtitude.min_int = *(uint16_t*)&msg_copy[temp_index+3];
-			msg->longtitude.min_fract = *(uint32_t*)&msg_copy[temp_index+5];
+			msg->longtitude.deg = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index+2] << 16);
+			msg->longtitude.min_int = msg_copy[temp_index+3] + (msg_copy[temp_index+4] << 8);
+			msg->longtitude.min_fract = msg_copy[temp_index+5] + (msg_copy[temp_index+6] << 8) + (msg_copy[temp_index + 7] << 16) + (msg_copy[temp_index + 8] << 24);
 			temp_index += 10;
 			break;
 
@@ -184,12 +184,12 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 			break;
 
 		case 7: /// HDOP
-			*(msg->horizontal_dilution_of_precision) = *(uint32_t*)&msg_copy[temp_index];
+			*(msg->horizontal_dilution_of_precision) = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index + 2] << 16) + (msg_copy[temp_index + 3] << 24);
 			temp_index += 4;
 			break;
 
 		case 8: /// MSL Altitude
-			*(msg->altitude) = *(uint32_t*)&msg_copy[temp_index];
+			*(msg->altitude) = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index + 2] << 16) + (msg_copy[temp_index + 3] << 24);
 			temp_index += 4;
 			break;
 
@@ -198,13 +198,13 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 			break;
 
 		case 10: /// Age of diff coor
-			msg->age_of_diff_corr = *(uint32_t*)&msg_copy[temp_index];
+			msg->age_of_diff_corr = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index + 2] << 16) + (msg_copy[temp_index + 3] << 24);
 			temp_index += 4;
 			break;
 
 		case 11: /// Checksum
 			temp_index++;		///	'*' character
-			msg->checksum = *(uint16_t*)&msg_copy[temp_index];
+			msg->checksum = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
 			temp_index += 2;
 		}
 

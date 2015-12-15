@@ -27,9 +27,9 @@ typedef enum
 
 typedef struct
 {
-	uint16_t 	deg;		/*< degrees **/
-	uint8_t 	min_int;	/*< integer part of minutes **/
-	uint16_t 	min_fract;	/*< fraction part of minutes **/
+	uint32_t 	deg;		/*< degrees **/
+	uint16_t 	min_int;	/*< integer part of minutes **/
+	uint32_t 	min_fract;	/*< fraction part of minutes **/
 }gps_coord_t;
 
 typedef struct
