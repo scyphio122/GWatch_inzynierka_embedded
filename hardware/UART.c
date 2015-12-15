@@ -29,6 +29,7 @@ static volatile uint8_t	uart_tx_transmission_in_progress;
 void UART0_IRQHandler()
 {
 	static uint8_t data_byte = 0;
+	static uint8_t end_of_checksum_index = 255;
 	if(NRF_UART0->EVENTS_RXDRDY)
 	{
 		///	Clear the rx interrupt flag
@@ -36,8 +37,10 @@ void UART0_IRQHandler()
 		data_byte = NRF_UART0->RXD;
 		///	Put the data byte in the fifo
 		app_fifo_put(&uart_rx_fifo, data_byte);
-
-
+		if(data_byte == '*')
+			end_of_checksum_index = gps_msg_byte_index;
+		if((gps_msg_byte_index > 0) && (gps_msg_byte_index < end_of_checksum_index))
+			gps_msg_checksum ^= data_byte;
 		if(data_byte == '\n')
 		{
 			gps_msg_size = gps_msg_byte_index;
@@ -45,6 +48,8 @@ void UART0_IRQHandler()
 			gps_msg_received = 1;
 
 			GPS_Parse_Message();
+			gps_msg_received = 0;
+			end_of_checksum_index = 255;
 		}
 		else
 			++gps_msg_byte_index;
@@ -68,6 +73,29 @@ void UART0_IRQHandler()
 			UART_Stop_Tx();
 		}
 	}
+
+	if(NRF_UART0->EVENTS_ERROR)
+	{
+		NRF_UART0->EVENTS_ERROR = 0;
+		switch(NRF_UART0->ERRORSRC)
+		{
+		case UART_ERRORSRC_BREAK_Msk:
+		{
+			break;
+		}
+		case UART_ERRORSRC_FRAMING_Msk:
+		{
+
+			break;
+		}
+		case UART_ERRORSRC_OVERRUN_Msk:
+		{
+			break;
+		}
+
+		}
+	}
+
 }
 
 /**

@@ -16,8 +16,7 @@ uint8_t 					gps_msg_byte_index;
 uint8_t						gps_msg_size;
 volatile uint8_t 			gps_msg_received;
 uint16_t					gps_msg_checksum;
-
-static gps_gga_msg_t		gga_message;
+gps_gga_msg_t		gga_message;
 /**
  * This function initializes the GPS pins
  */
@@ -117,6 +116,18 @@ static gps_msg_header_e GPS_Get_Message_Type()
 	return UNKNOWN_HEADER;
 }
 
+/**
+ * \brief This function checks if the message was received correctly. If so, it returns 0. If non-zero value returned - there is an error
+ *
+ * \param message - pointer to the message on which the checksum is to be calculated
+ */
+static uint32_t GPS_Checksum_Check(uint8_t* message, uint8_t calc_checksum)
+{
+	uint16_t msg_checksum = message[gps_msg_size - 8] + message[gps_msg_size - 9]*10;
+
+	return calc_checksum ^ msg_checksum;
+}
+
 __attribute__((optimize("O1")))
 uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 {
@@ -130,96 +141,118 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 		Fifo_Get(&uart_rx_fifo, &msg_copy[temp_index++]);
 	}
 
-	temp_index = 0;
-	message_length = gps_msg_size -8;	///	size minus msg header size and /r /n characters
-	do
-	{
-		///	If it is the separator, then continue
-		if(msg_copy[temp_index] == ',')
+	///	Check if the checksum is correct
+	//if(!GPS_Checksum_Check(msg_copy, gps_msg_checksum))
+	//{
+		temp_index = 0;
+		message_length = gps_msg_size -8;	///	size minus msg header size and /r /n characters
+		do
 		{
-			temp_index++;
-			currently_parsed_field_ind++;
-			continue;
-		}
+			///	If it is the separator, then continue
+			if(msg_copy[temp_index] == ',')
+			{
+				temp_index++;
+				currently_parsed_field_ind++;
+				continue;
+			}
 
-		switch(currently_parsed_field_ind)
-		{
-		case 0:	///	TIME
-		{
-			msg->utc_time.hour = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
-			msg->utc_time.min  = msg_copy[temp_index+2] + (msg_copy[temp_index+3] << 8);
-			msg->utc_time.sec  = msg_copy[temp_index+4] + (msg_copy[temp_index+5] << 8);
-			msg->utc_time.msec = msg_copy[temp_index+7] + (msg_copy[temp_index+8] << 8) + (msg_copy[temp_index + 9] << 16);
-			temp_index = temp_index + 10;
-			break;
-		}
-		case 1:	///	Latitude
-			msg->latitude.deg = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
-			msg->latitude.min_int = msg_copy[temp_index+2] + (msg_copy[temp_index+3] << 8);
-			msg->latitude.min_fract = msg_copy[temp_index+5] + (msg_copy[temp_index+6] << 8) + (msg_copy[temp_index + 7] << 16) + (msg_copy[temp_index + 8] << 24);
-			temp_index += 9;
-			break;
+			switch(currently_parsed_field_ind)
+			{
+			case 0:	///	TIME
+			{
+				memcpy(msg->utc_time.hour, &msg_copy[temp_index], 2);
+				memcpy(msg->utc_time.min, &msg_copy[temp_index+2],2);
+				memcpy(msg->utc_time.sec, &msg_copy[temp_index+4],2);
+				memcpy(msg->utc_time.msec, &msg_copy[temp_index+7], 3);
+				temp_index = temp_index + 10;
+				break;
+			}
+			case 1:	///	Latitude
+				memcpy(&msg->latitude.deg[1], &msg_copy[temp_index], 2);
+				memcpy(msg->latitude.min_int, &msg_copy[temp_index+2],2);
+				memcpy(msg->latitude.min_fract, &msg_copy[temp_index+5], 4);
+				temp_index += 9;
+				break;
 
-		case 2:	///	Latitude indi
-			msg->latitude_indi = msg_copy[temp_index++];
-			break;
+			case 2:	///	Latitude indi
+				msg->latitude_indi = msg_copy[temp_index++];
+				break;
 
-		case 3:	/// Longtitude
-			msg->longtitude.deg = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index+2] << 16);
-			msg->longtitude.min_int = msg_copy[temp_index+3] + (msg_copy[temp_index+4] << 8);
-			msg->longtitude.min_fract = msg_copy[temp_index+5] + (msg_copy[temp_index+6] << 8) + (msg_copy[temp_index + 7] << 16) + (msg_copy[temp_index + 8] << 24);
-			temp_index += 10;
-			break;
+			case 3:	/// Longtitude
+				memcpy(msg->longtitude.deg, &msg_copy[temp_index], 3);
+				memcpy(msg->longtitude.min_int, &msg_copy[temp_index+3], 2);
+				memcpy(msg->longtitude.min_fract, &msg_copy[temp_index+6], 4);
+				temp_index += 10;
+				break;
 
-		case 4:	///	Longtitude indi
-			msg->longtitude_indi = msg_copy[temp_index++];
-			break;
+			case 4:	///	Longtitude indi
+				msg->longtitude_indi = msg_copy[temp_index++];
+				break;
 
-		case 5:	///	Position fix indi
-			msg->fix_indi = msg_copy[temp_index++];
-			break;
+			case 5:	///	Position fix indi
+				msg->fix_indi = msg_copy[temp_index++];
+				break;
 
-		case 6: /// Satellites used
-			msg->sats_used = msg_copy[temp_index++];
-			break;
+			case 6: /// Satellites used
+			{
+				uint8_t field_size = 0;
+				while(msg_copy[temp_index + field_size] != ',')
+					field_size++;
+				memcpy(msg->sats_used, &msg_copy[temp_index], field_size);
+				temp_index += field_size;
+				break;
+			}
+			case 7: /// HDOP
+				memcpy(msg->horizontal_dilution_of_precision, &msg_copy[temp_index], 4);
+				temp_index += 4;
+				break;
 
-		case 7: /// HDOP
-			*(msg->horizontal_dilution_of_precision) = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index + 2] << 16) + (msg_copy[temp_index + 3] << 24);
-			temp_index += 4;
-			break;
+			case 8: /// MSL Altitude
+			{
+				uint8_t field_size = 0;
+				while(msg_copy[temp_index + field_size] != ',')
+					field_size++;
+				memcpy(msg->altitude, &msg_copy[temp_index], field_size);
 
-		case 8: /// MSL Altitude
-			*(msg->altitude) = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index + 2] << 16) + (msg_copy[temp_index + 3] << 24);
-			temp_index += 4;
-			break;
+				temp_index += field_size;
+				break;
+			}
+			case 9: /// Units
+				msg->altitude_unit = msg_copy[temp_index++];
+				break;
 
-		case 9: /// Units
-			msg->altitude_unit = msg_copy[temp_index++];
-			break;
+			case 10:
+				memcpy(msg->geoidal_separation, &msg_copy[temp_index], 4);
+				temp_index += 4;
+				break;
 
-		case 10:
-			msg->geoidal_separation = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index+2] << 16) + (msg_copy[temp_index+3] << 24);
-			temp_index += 4;
-			break;
+			case 11:
+				msg->geoidal_separ_units = msg_copy[temp_index++];
+				break;
 
-		case 11:
-			msg->geoidal_separ_units = msg_copy[temp_index++];
-			break;
+			case 12: /// Age of diff coor
+			{
+				uint8_t field_size = 0;
+				while(msg_copy[temp_index + field_size] != ',')
+					field_size++;
+				memcpy(msg->age_of_diff_corr, &msg_copy[temp_index], field_size);
+				temp_index += field_size;
+				break;
+			}
+			case 13: /// Checksum
+				++temp_index;
+				memcpy(msg->checksum, &msg_copy[temp_index], 2);
+				temp_index += 2;
+				break;
+			}
 
-		case 12: /// Age of diff coor
-			msg->age_of_diff_corr = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8) + (msg_copy[temp_index + 2] << 16) + (msg_copy[temp_index + 3] << 24);
-			temp_index += 4;
-			break;
+		}while(temp_index < message_length);
 
-		case 13: /// Checksum
-			++temp_index;
-			msg->checksum = msg_copy[temp_index] + (msg_copy[temp_index+1] << 8);
-			temp_index += 2;
-			break;
-		}
+		return NRF_SUCCESS;
 
-	}while(temp_index < message_length);
-	return NRF_SUCCESS;
+//	}
+
+//	return NRF_ERROR_INVALID_DATA;
 }
 
 void GPS_Parse_Message()
@@ -228,8 +261,10 @@ void GPS_Parse_Message()
 	switch(msg_header)
 	{
 	case TIME_POS_FIX_MSG:
+	{
 		GPS_Parse_GGA_Message(&gga_message);
 		break;
+	}
 
 	case MIN_NAVI_DATA:
 
@@ -257,11 +292,14 @@ void GPS_Parse_Message()
 
 	}
 
+	///	Clear the gps message checksum
+	gps_msg_checksum = 0;
 	uint8_t dummy_byte = 0;
 	for(uint16_t i=0; i<gps_msg_size; i++)
 	{
 		Fifo_Get(&uart_rx_fifo, &dummy_byte);
 	}
 }
+
 
 

@@ -225,7 +225,6 @@ SysTick_Handler:
 
 
 /* IRQ Handlers */
-
     .globl  Default_Handler
     .type   Default_Handler, %function
 Default_Handler:

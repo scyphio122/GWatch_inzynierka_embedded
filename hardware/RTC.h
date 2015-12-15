@@ -39,10 +39,10 @@ typedef struct
 
 typedef struct
 {
-	uint16_t hour;
-	uint16_t min;
-	uint16_t sec;
-	uint32_t msec;
+	uint8_t hour[2];
+	uint8_t min[2];
+	uint8_t sec[2];
+	uint8_t msec[3];
 }utc_time_t;
 
 extern volatile uint8_t  timeout_flag;

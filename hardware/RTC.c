@@ -17,8 +17,35 @@ volatile uint8_t  timeout_flag = 0;
 volatile uint32_t rtc_overflow_cnt;
 
 volatile uint32_t partial_timestamp;
-uint32_t rtc_last_synch_time;
 
+
+void RTC1_IRQHandler()
+{
+	if(NRF_RTC1->EVENTS_COMPARE[0])
+	{
+		NRF_RTC1->EVENTS_COMPARE[0] = 0;
+		wait_flag = RTC_DELAY_COMPLETED;
+	}
+
+	if(NRF_RTC1->EVENTS_COMPARE[1])
+	{
+		NRF_RTC1->EVENTS_COMPARE[1] = 0;
+		timeout_flag = 1;
+	}
+	if(NRF_RTC1->EVENTS_COMPARE[2])
+	{
+		NRF_RTC1->EVENTS_COMPARE[2] = 0;
+	}
+	if(NRF_RTC1->EVENTS_COMPARE[3])
+	{
+		NRF_RTC1->EVENTS_COMPARE[3] = 0;
+	}
+
+	if(NRF_RTC1->EVENTS_OVRFLW)
+	{
+		NRF_RTC1->EVENTS_OVRFLW = 0;
+	}
+}
 void RTC_Config()
 {
 	///	Set the RTC1 prescaler
@@ -58,7 +85,6 @@ uint8_t RTC_Set_Timestamp(uint32_t timestamp)
 		else	///	Else we round it down so the partial_timestamp does not have to be changed
 			partial_timestamp = timestamp_buffer;
 
-		rtc_last_synch_time = timestamp;
 
 		return RTC_OP_OK;
 	}
@@ -90,17 +116,17 @@ void RTC_Wait(uint32_t time)
 
 void RTC_Timeout(uint32_t time)
 {
-	if(NRF_RTC1->INTENSET & RTC_INTENSET_COMPARE2_Msk) /// return if timeout already started
+	if(NRF_RTC1->INTENSET & RTC_INTENSET_COMPARE1_Msk) /// return if timeout already started
 	{
 		return;
 	}
 	timeout_flag = 0;
-	NRF_RTC1->CC[2] = (NRF_RTC1->COUNTER + time);
-	NRF_RTC1->INTENSET |= RTC_INTENSET_COMPARE2_Msk;	
+	NRF_RTC1->CC[1] = (NRF_RTC1->COUNTER + time);
+	NRF_RTC1->INTENSET |= RTC_INTENSET_COMPARE1_Msk;
 }
 inline void RTC_Cancel_Timeout()
 {
-	NRF_RTC1->INTENCLR = RTC_INTENCLR_COMPARE2_Msk;
+	NRF_RTC1->INTENCLR = RTC_INTENCLR_COMPARE1_Msk;
 }
 
 void GetDiffBetweenTwoTimestamps(uint32_t earlier_timestamp, uint32_t later_timestamp, date_t* date)
