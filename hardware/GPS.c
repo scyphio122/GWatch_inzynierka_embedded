@@ -12,11 +12,12 @@
 #include "UART.h"
 
 static const uint8_t* 		gps_msg_header[] = {"$GPGGA", "$GPGSA", "$GPGSV", "$GPRMC", "$GPVTG", "$PGTOP"};
+static uint8_t				gps_msg_frequency[] = "1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0";
 uint8_t 					gps_msg_byte_index;
 uint8_t						gps_msg_size;
 volatile uint8_t 			gps_msg_received;
 uint16_t					gps_msg_checksum;
-gps_gga_msg_t		gga_message;
+gps_gga_msg_t				gga_message;
 /**
  * This function initializes the GPS pins
  */
@@ -80,38 +81,57 @@ void GPS_Reset()
  */
 static gps_msg_header_e GPS_Get_Message_Type()
 {
-	uint8_t msg_header[6];
+	uint8_t msg_header[8];
 	uint32_t ret_val = 0;
 
-	for(uint8_t i=0; i<sizeof(msg_header); i++)
+	for(uint8_t i=0; i<2; i++)
 	{
 		Fifo_Get(&uart_rx_fifo, &msg_header[i]);
 	}
 
-	ret_val = memcmp(msg_header, gps_msg_header[TIME_POS_FIX_MSG], 6);
-	if(ret_val == 0)
-		return TIME_POS_FIX_MSG;
+	if(msg_header[1] == 'G')	///	If it is GPS protocol command
+	{
+		for(uint8_t i=2; i<sizeof(msg_header); i++)	///	Get the rest of the message header
+		{
+			Fifo_Get(&uart_rx_fifo, &msg_header[i]);
+		}
+		ret_val = memcmp(msg_header, gps_msg_header[TIME_POS_FIX_MSG], 6);
+		if(ret_val == 0)
+			return TIME_POS_FIX_MSG;
 
-	ret_val = memcmp(msg_header, gps_msg_header[SATS_IN_VIEW], 6);
-	if(ret_val == 0)
-		return SATS_IN_VIEW;
+		ret_val = memcmp(msg_header, gps_msg_header[SATS_IN_VIEW], 6);
+		if(ret_val == 0)
+			return SATS_IN_VIEW;
 
-	ret_val = memcmp(msg_header, gps_msg_header[MIN_NAVI_DATA], 6);
-	if(ret_val == 0)
-		return MIN_NAVI_DATA;
+		ret_val = memcmp(msg_header, gps_msg_header[MIN_NAVI_DATA], 6);
+		if(ret_val == 0)
+			return MIN_NAVI_DATA;
 
-	ret_val = memcmp(msg_header, gps_msg_header[DOP_AND_ACTIVE_SATS], 6);
-	if(ret_val == 0)
-		return DOP_AND_ACTIVE_SATS;
+		ret_val = memcmp(msg_header, gps_msg_header[DOP_AND_ACTIVE_SATS], 6);
+		if(ret_val == 0)
+			return DOP_AND_ACTIVE_SATS;
 
-	ret_val = memcmp(msg_header, gps_msg_header[COURSE_AND_SPEED], 6);
-	if(ret_val == 0)
-		return COURSE_AND_SPEED;
+		ret_val = memcmp(msg_header, gps_msg_header[COURSE_AND_SPEED], 6);
+		if(ret_val == 0)
+			return COURSE_AND_SPEED;
 
-	ret_val = memcmp(msg_header, gps_msg_header[ANT_ADVISOR], 6);
-	if(ret_val == 0)
-		return ANT_ADVISOR;
+		ret_val = memcmp(msg_header, gps_msg_header[ANT_ADVISOR], 6);
+		if(ret_val == 0)
+			return ANT_ADVISOR;
+	}
+	else
+	if(msg_header[1] == 'P')	///	Else if it is chip command
+	{
+		for(uint8_t i=2; i<sizeof(msg_header)-1; i++)
+		{
+			///	Get the rest of the message header
+			Fifo_Get(&uart_rx_fifo, &msg_header[i]);
+		}
 
+		ret_val = memcmp(msg_header, "$PMTK001", sizeof(msg_header));
+		if(ret_val == 0)
+			return ACK_MSG;
+	}
 
 	return UNKNOWN_HEADER;
 }
@@ -128,6 +148,13 @@ static uint32_t GPS_Checksum_Check(uint8_t* message, uint8_t calc_checksum)
 	return calc_checksum ^ msg_checksum;
 }
 
+/**
+ * \brief This function parses the GGA message from the GPS module into the given structure
+ *
+ * \param msg - pointer to the structure where the parsed data is to be stored
+ *
+ * \return NRF_SUCCESS
+ */
 __attribute__((optimize("O1")))
 uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 {
@@ -255,6 +282,37 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
 //	return NRF_ERROR_INVALID_DATA;
 }
 
+/**
+ * \brief This function parses the return message sent from the GPS module to MTK message
+ *
+ * \return structure of command code on which response came and return flag
+ */
+gps_ack_msg_ret_val_t GPS_Parse_ACK_Message()
+{
+	uint8_t message_length = gps_msg_size - 8; /// minus size of header
+	uint8_t msg_copy[32] = {0};
+	uint8_t temp_index = 0;
+	gps_ack_msg_ret_val_t ret_val;
+	while(message_length-- > 0)
+	{
+		Fifo_Get(&uart_rx_fifo, &msg_copy[temp_index++]);
+	}
+
+	if(msg_copy[0] == ',')
+	{
+		///	Copy the command
+		memcpy(ret_val.command, &msg_copy[1], 3);
+	}
+
+	/// Copy the ret_val flag
+	memcpy(&ret_val.ret_val, &msg_copy[5], 1);
+
+	return ret_val;
+}
+
+/**
+ * \brief This function parses all the GPS messages which are serviced by the program
+ */
 void GPS_Parse_Message()
 {
 	gps_msg_header_e msg_header = GPS_Get_Message_Type();
@@ -285,7 +343,25 @@ void GPS_Parse_Message()
 	case ANT_ADVISOR:
 
 		break;
+	case ACK_MSG:
+	{
+		gps_ack_msg_ret_val_t ret_val = GPS_Parse_ACK_Message();
+		switch(ret_val.ret_val)
+		{
+		case INVALID_COMMAND_PACKET:
+			break;
 
+		case UNSUPPORTED_COMMAND:
+			break;
+
+		case VALID_COMMAND_ACTION_FAILED:
+			break;
+
+		case VALID_COMMAND_ACTION_SUCCESS:
+			break;
+		}
+		break;
+	}
 	case UNKNOWN_HEADER:
 
 		break;
@@ -299,6 +375,30 @@ void GPS_Parse_Message()
 	{
 		Fifo_Get(&uart_rx_fifo, &dummy_byte);
 	}
+}
+
+uint32_t GPS_Change_Message_Frequency(gps_msg_rate_indexes_e msg_to_change, uint8_t rate)
+{
+	uint8_t msg[] = "$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0*2C\r\n";
+	uint8_t checksum = 0;
+	gps_msg_frequency[msg_to_change] = rate;
+
+	///	Set the message
+	memcpy(&msg[9], gps_msg_frequency, sizeof(gps_msg_frequency));
+
+	/// calculate the checksum
+	for(uint8_t i=1; msg[i] != '*'; i++)
+		checksum ^= msg[i];
+
+	uint8_t first_byte = checksum >> 4;
+	uint8_t second_byte = checksum & (0x0F);
+	uint8_t char_checksum[2] = {0};
+	sprintf(char_checksum,"%d%d", first_byte, second_byte);
+
+	memcpy(msg[sizeof(msg) - 4], char_checksum, 2);
+	UART_Start_Tx();
+	UART_Send_String(msg, sizeof(msg));
+	UART_Stop_Tx();
 }
 
 

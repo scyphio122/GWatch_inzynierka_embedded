@@ -2,15 +2,27 @@
 #define SPI_H_INCLUDED
 #include "nrf51.h"
 #include "nrf51_bitfields.h"
+#include "hardware_settings.h"
+
+extern uint8_t  spi_transfer_ongoing_flag;			/*< SPI transfer in progress flag */
+
+extern uint8_t* spi_0_rx_buff;						/*< Rx buffer pointer */
+extern uint8_t* spi_0_tx_buff;						/*< Tx buffer pointer */
+extern uint16_t spi_0_rx_index;						/*< Rx buffer index */
+extern uint16_t spi_0_tx_index;						/*< Tx buffer index */
+extern uint16_t spi_0_tx_buff_size;					/*< Tx buffer size */
+extern uint16_t spi_0_rx_buff_size;					/*< Rx buffer size */
 
 
-extern unsigned char* rx_buff;				/*< Rx buffer pointer */
-extern unsigned char* tx_buff;				/*< Tx buffer pointer */
-extern uint16_t rx_index;					/*< Rx buffer index */
-extern uint16_t tx_index;					/*< Tx buffer index */
-extern uint16_t tx_buff_size;				/*< Tx buffer size */
-extern uint16_t rx_buff_size;				/*< Rx buffer size */
-extern uint8_t spi_transfer_ongoing_flag;	/*< SPI transfer in progress flag */
+#ifdef SPI1_USED
+extern uint8_t* spi_1_rx_buff;						/*< Rx buffer pointer */
+extern uint8_t* spi_1_tx_buff;						/*< Tx buffer pointer */
+extern uint16_t spi_1_rx_index;						/*< Rx buffer index */
+extern uint16_t spi_1_tx_index;						/*< Tx buffer index */
+extern uint16_t spi_1_tx_buff_size;					/*< Tx buffer size */
+extern uint16_t spi_1_rx_buff_size;					/*< Rx buffer size */
+
+#endif
 
 /**@brief A structure containing configuration parameters of the SPI master driver. */
 typedef struct
@@ -31,12 +43,11 @@ typedef struct
 /** \brief Function to init spi peripherial 
  * 	\param init - pointer to spi_config_t struct
  *	\return NRF_SUCCESS or error_code */
-uint32_t Spi_Init(spi_config_t * init);
+uint32_t Spi_Init(spi_config_t * init, uint8_t cs_pin);
 
-void SPI_Assert_CS();
-void SPI_Deassert_CS();
+void SPI_Assert_CS(uint8_t cs_pin);
+void SPI_Deassert_CS(uint8_t cs_pin);
 
-uint32_t SPI_Transfer(unsigned char* data_to_send, uint16_t data_size, unsigned char* rx_buffer, uint16_t rx_size);
-
+uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI,unsigned char* data_to_send, uint16_t data_size, unsigned char* rx_buffer, uint16_t rx_size, uint8_t cs_pin);
 void  spi_send_message();
 #endif /* SPI_H_INCLUDED */

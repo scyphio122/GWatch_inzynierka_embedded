@@ -9,5 +9,6 @@
 #define HARDWARE_DISPLAY_H_
 
 
+void Display_Config();
 
 #endif /* HARDWARE_DISPLAY_H_ */

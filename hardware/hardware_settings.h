@@ -18,6 +18,7 @@
 #define SPI1_SCK_PIN		(uint8_t)15
 
 /** DISPLAY SPI MODULE **/
+//#define SPI1_USED			(uint8_t)1
 #define DISP_MISO			(uint8_t)25
 #define DISP_SCK			(uint8_t)24
 #define DISP_MOSI			(uint8_t)23

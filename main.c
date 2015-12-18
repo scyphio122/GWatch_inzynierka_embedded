@@ -11,26 +11,39 @@
 #include "GPS.h"
 #include "RTC.h"
 #include "Clock.h"
+#include "ble_gwatch.h"
+#include "nrf_soc.h"
+#include "display.h"
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-
-
-
-int main()
+void NVIC_Config()
 {
-	NVIC_SetPriority(UART0_IRQn, 0);
-	NVIC_EnableIRQ(UART0_IRQn);
-	NVIC_SetPriority(RTC1_IRQn, 1);
-	NVIC_EnableIRQ(RTC1_IRQn);
+	sd_nvic_SetPriority(UART0_IRQn, 1);
+	sd_nvic_EnableIRQ(UART0_IRQn);
+	sd_nvic_SetPriority(RTC1_IRQn, 1);
+	sd_nvic_EnableIRQ(RTC1_IRQn);
+}
 
-	HFCLK_Clock_Configure(CLOCK_XTALFREQ_XTALFREQ_16MHz);
-	LFCLK_Clock_Configure(1);
+void Periph_Config()
+{
 	RTC_Config();
 	UART_Init();
 	GPS_Init();
+	Display_Config();
+}
+
+int main()
+{
+	Periph_Config();
+	BLE_Init();
+	Advertising_Init();
+	NVIC_Config();
+
+	Advertising_Start();
 	RTC_Start();
 	UART_Enable();
+
 	UART_Start_Rx();
 	GPS_Turn_On();
 	uint32_t start_timestamp = RTC_Get_Timestamp();

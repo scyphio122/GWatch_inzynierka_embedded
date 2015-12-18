@@ -25,6 +25,30 @@ typedef enum
 	UNKNOWN_HEADER
 }gps_msg_header_e;
 
+typedef enum
+{
+	INVALID_COMMAND_PACKET = 0,
+	UNSUPPORTED_COMMAND,
+	VALID_COMMAND_ACTION_FAILED,
+	VALID_COMMAND_ACTION_SUCCESS
+}gps_ack_msg_ret_val_e;
+
+typedef enum
+{
+	GLL = 0,
+	RMC = 3,
+	VTG = 5,
+	GGA = 7,
+	GSA = 9,
+	GSV = 11,
+	MCHN = 18
+}gps_msg_rate_indexes_e;
+
+typedef struct
+{
+	uint8_t 				command[3];
+	gps_ack_msg_ret_val_e 	ret_val;
+}gps_ack_msg_ret_val_t;
 typedef struct
 {
 	uint8_t 	deg[3];		/*< degrees **/

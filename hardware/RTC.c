@@ -16,7 +16,7 @@ volatile unsigned char wait_flag = 0;
 volatile uint8_t  timeout_flag = 0;
 volatile uint32_t rtc_overflow_cnt;
 
-volatile uint32_t partial_timestamp;
+volatile uint32_t rtc_timestamp;
 
 
 void RTC1_IRQHandler()
@@ -36,7 +36,7 @@ void RTC1_IRQHandler()
 	{
 		NRF_RTC1->EVENTS_COMPARE[2] = 0;
 	}
-	if(NRF_RTC1->EVENTS_COMPARE[3])
+	if(NRF_RTC1->EVENTS_COMPARE[3])				/// Used for Display VCOM pin
 	{
 		NRF_RTC1->EVENTS_COMPARE[3] = 0;
 	}
@@ -44,6 +44,7 @@ void RTC1_IRQHandler()
 	if(NRF_RTC1->EVENTS_OVRFLW)
 	{
 		NRF_RTC1->EVENTS_OVRFLW = 0;
+		rtc_timestamp += 512;
 	}
 }
 void RTC_Config()
@@ -64,7 +65,7 @@ __INLINE void RTC_Start()
 
 uint32_t RTC_Get_Timestamp()
 {
-	return (partial_timestamp + RTC_COUNTER_INT_SEC);
+	return (rtc_timestamp + RTC_COUNTER_INT_SEC);
 }
 
 
@@ -81,9 +82,9 @@ uint8_t RTC_Set_Timestamp(uint32_t timestamp)
 	{
 		///	If the sub second part of COUNTER register is bigger than half second, then we round it up, so the partial_timestamp must be one second smaller
 		if(RTC_COUNTER_SUB_SEC >= RTC_COUNTER_HALF_SECOND)
-			partial_timestamp = timestamp_buffer - 1;
+			rtc_timestamp = timestamp_buffer - 1;
 		else	///	Else we round it down so the partial_timestamp does not have to be changed
-			partial_timestamp = timestamp_buffer;
+			rtc_timestamp = timestamp_buffer;
 
 
 		return RTC_OP_OK;

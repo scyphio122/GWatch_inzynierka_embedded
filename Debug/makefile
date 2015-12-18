@@ -14,6 +14,7 @@ RM := rm -rf
 -include nordic/ble/subdir.mk
 -include libraries/subdir.mk
 -include hardware/subdir.mk
+-include BLE/subdir.mk
 -include subdir.mk
 -include objects.mk
 
