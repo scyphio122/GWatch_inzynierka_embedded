@@ -85,7 +85,7 @@ void 		GPS_Turn_On();
 void 		GPS_Turn_Off();
 void 		GPS_Reset();
 void 		GPS_Parse_Message();
-uint32_t	GPS_Parse_GGA_Message();
+uint32_t 	GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy);
 
 
 #endif /* HARDWARE_GPS_H_ */

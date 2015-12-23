@@ -27,7 +27,7 @@ uint16_t spi_1_tx_buff_size;				/*< Tx buffer size */
 uint16_t spi_1_rx_buff_size;				/*< Rx buffer size */
 #endif
 
-__attribute__((optimize("O1")))
+__attribute__((optimize("O0")))
 static void  SPI_Execute_Transaction(NRF_SPI_Type* SPI)
 {
 	uint8_t* rx_buff;
@@ -154,12 +154,31 @@ static void  SPI_Execute_Transaction(NRF_SPI_Type* SPI)
 
 
 #ifdef SPI1_USED
-__attribute__((optimize("O2")))
+__attribute__((optimize("O0")))
 void SPI1_TWI1_IRQHandler()
 {
-	///	Clear the interrupt flag
-	NRF_SPI0->EVENTS_READY = 0;
 
+	///	Clear the interrupt flag
+	//NRF_SPI1->EVENTS_READY = 0;
+
+	///	If we reached end of receive or transmission
+	if((spi_1_tx_index >= spi_1_tx_buff_size))
+	{
+
+
+		NRF_SPI1->INTENCLR = SPI_INTENCLR_READY_Msk;
+
+		///	Deassert the cs pin
+		SPI_Deassert_CS(spi_1_cs_pin);
+
+
+
+		/*while(!NRF_SPI1->EVENTS_READY){}
+		///	Disable the peripheral
+		NRF_SPI1->ENABLE = 0;
+		NRF_SPI1->EVENTS_READY = 0;*/
+	}
+	else
 	///	If we want to transmit
 	if(spi_1_tx_buff_size != 0)
 	{
@@ -173,14 +192,8 @@ void SPI1_TWI1_IRQHandler()
 		spi_1_rx_buff[spi_1_rx_index++] = NRF_SPI1->RXD;
 	}
 
-	///	If we reached end of receive or transmission
-	if(spi_1_rx_index >= spi_1_rx_buff_size || (spi_1_tx_index >= spi_1_tx_buff_size))
-	{
-		///	Disable the peripheral
-		NRF_SPI1->ENABLE = 0;
-		///	Deassert the cs pin
-		SPI_Deassert_CS(spi_1_cs_pin);
-	}
+
+
 }
 #endif
 
@@ -209,8 +222,7 @@ uint32_t Spi_Init(spi_config_t * init, uint8_t cs_pin)
 	nrf_gpio_cfg_output(cs_pin);
 	nrf_gpio_pin_set(cs_pin);
 
-	NRF_SPI0->INTENSET = SPI_INTENSET_READY_Enabled<<SPI_INTENSET_READY_Pos;
-	sd_nvic_DisableIRQ(SPI0_TWI0_IRQn);
+
 	return NRF_SUCCESS;
 }
 
@@ -247,7 +259,7 @@ uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI, unsigned char* data_to_send, u
 		spi_1_rx_index = 0;
 	}
 #endif
-
+	SPI->INTENCLR = SPI_INTENCLR_READY_Msk;
 	/// Enable peripheral
 	SPI->ENABLE = 1;
 	///	Clear (assert) the Chip Select
@@ -291,7 +303,10 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 	///	Enable the SPI peripheral
 	SPI->ENABLE = 1;
 
-	SPI->TXD = data_to_send;
+	SPI->INTENSET = SPI_INTENSET_READY_Msk;
+
+	//SPI->TXD = *data_to_send;
+	sd_nvic_SetPendingIRQ(SPI1_TWI1_IRQn);
 }
 
 

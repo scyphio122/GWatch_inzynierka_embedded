@@ -79,56 +79,46 @@ void GPS_Reset()
  * \return  *Enum which describes the result pattern
  * 			*UNKNOWN_MSG_HEADER - if message header not recognised
  */
-static gps_msg_header_e GPS_Get_Message_Type()
+static gps_msg_header_e GPS_Get_Message_Type(uint8_t* gps_msg)
 {
-	uint8_t msg_header[8];
 	uint32_t ret_val = 0;
 
-	for(uint8_t i=0; i<2; i++)
-	{
-		Fifo_Get(&uart_rx_fifo, &msg_header[i]);
-	}
+	if(gps_msg[0] != '$')
+		return UNKNOWN_HEADER;
 
-	if(msg_header[1] == 'G')	///	If it is GPS protocol command
+	if(gps_msg[1] == 'G')	///	If it is GPS protocol command
 	{
-		for(uint8_t i=2; i<sizeof(msg_header); i++)	///	Get the rest of the message header
-		{
-			Fifo_Get(&uart_rx_fifo, &msg_header[i]);
-		}
-		ret_val = memcmp(msg_header, gps_msg_header[TIME_POS_FIX_MSG], 6);
+
+		ret_val = memcmp(gps_msg, gps_msg_header[TIME_POS_FIX_MSG], 6);
 		if(ret_val == 0)
 			return TIME_POS_FIX_MSG;
 
-		ret_val = memcmp(msg_header, gps_msg_header[SATS_IN_VIEW], 6);
+		ret_val = memcmp(gps_msg, gps_msg_header[SATS_IN_VIEW], 6);
 		if(ret_val == 0)
 			return SATS_IN_VIEW;
 
-		ret_val = memcmp(msg_header, gps_msg_header[MIN_NAVI_DATA], 6);
+		ret_val = memcmp(gps_msg, gps_msg_header[MIN_NAVI_DATA], 6);
 		if(ret_val == 0)
 			return MIN_NAVI_DATA;
 
-		ret_val = memcmp(msg_header, gps_msg_header[DOP_AND_ACTIVE_SATS], 6);
+		ret_val = memcmp(gps_msg, gps_msg_header[DOP_AND_ACTIVE_SATS], 6);
 		if(ret_val == 0)
 			return DOP_AND_ACTIVE_SATS;
 
-		ret_val = memcmp(msg_header, gps_msg_header[COURSE_AND_SPEED], 6);
+		ret_val = memcmp(gps_msg, gps_msg_header[COURSE_AND_SPEED], 6);
 		if(ret_val == 0)
 			return COURSE_AND_SPEED;
 
-		ret_val = memcmp(msg_header, gps_msg_header[ANT_ADVISOR], 6);
+		ret_val = memcmp(gps_msg, gps_msg_header[ANT_ADVISOR], 6);
 		if(ret_val == 0)
 			return ANT_ADVISOR;
 	}
 	else
-	if(msg_header[1] == 'P')	///	Else if it is chip command
+	if(gps_msg[1] == 'P')	///	Else if it is chip command
 	{
-		for(uint8_t i=2; i<sizeof(msg_header)-1; i++)
-		{
-			///	Get the rest of the message header
-			Fifo_Get(&uart_rx_fifo, &msg_header[i]);
-		}
 
-		ret_val = memcmp(msg_header, "$PMTK001", sizeof(msg_header));
+
+		ret_val = memcmp(gps_msg, "$PMTK001", sizeof(gps_msg));
 		if(ret_val == 0)
 			return ACK_MSG;
 	}
@@ -155,23 +145,18 @@ static uint32_t GPS_Checksum_Check(uint8_t* message, uint8_t calc_checksum)
  *
  * \return NRF_SUCCESS
  */
-__attribute__((optimize("O1")))
-uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg)
+__attribute__((optimize("O0")))
+uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 {
 	uint8_t message_length = gps_msg_size;
 	int8_t	currently_parsed_field_ind = -1;
 	uint8_t temp_byte = 0;
-	uint8_t msg_copy[255] = {0};
 	uint8_t temp_index = 0;
-	while(message_length-- > 0)
-	{
-		Fifo_Get(&uart_rx_fifo, &msg_copy[temp_index++]);
-	}
 
 	///	Check if the checksum is correct
 	//if(!GPS_Checksum_Check(msg_copy, gps_msg_checksum))
 	//{
-		temp_index = 0;
+		temp_index = 6;
 		message_length = gps_msg_size -8;	///	size minus msg header size and /r /n characters
 		do
 		{
@@ -315,12 +300,15 @@ gps_ack_msg_ret_val_t GPS_Parse_ACK_Message()
  */
 void GPS_Parse_Message()
 {
-	gps_msg_header_e msg_header = GPS_Get_Message_Type();
+	uint8_t* gps_msg = malloc(gps_msg_size);
+	for(uint8_t i=0; i< gps_msg_size; i++)
+		Fifo_Get(&uart_rx_fifo, &gps_msg[i]);
+	gps_msg_header_e msg_header = GPS_Get_Message_Type(gps_msg);
 	switch(msg_header)
 	{
 	case TIME_POS_FIX_MSG:
 	{
-		GPS_Parse_GGA_Message(&gga_message);
+		GPS_Parse_GGA_Message(&gga_message, gps_msg);
 		break;
 	}
 
@@ -367,7 +355,7 @@ void GPS_Parse_Message()
 		break;
 
 	}
-
+	free(gps_msg);
 	///	Clear the gps message checksum
 	gps_msg_checksum = 0;
 	uint8_t dummy_byte = 0;

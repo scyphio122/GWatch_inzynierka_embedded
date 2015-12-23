@@ -8,6 +8,9 @@
 #ifndef HARDWARE_HARDWARE_SETTINGS_H_
 #define HARDWARE_HARDWARE_SETTINGS_H_
 
+/** BUTTON MODULE **/
+#define BUTTON_PIN			(uint8_t)20
+
 /** UART MODULE **/
 #define UART_TX_PIN			(uint8_t)30
 #define UART_RX_PIN			(uint8_t)0
@@ -20,8 +23,8 @@
 /** DISPLAY SPI MODULE **/
 //#define SPI1_USED			(uint8_t)1
 #define DISP_MISO			(uint8_t)25
-#define DISP_SCK			(uint8_t)24
-#define DISP_MOSI			(uint8_t)23
+#define DISP_SCK			BUTTON_PIN//(uint8_t)24
+#define DISP_MOSI			UART_TX_PIN//(uint8_t)23
 #define DISP_CS				(uint8_t)22
 #define DISP_TOGGLE_PIN		(uint8_t)21
 #define DISP_LIGHT			(uint8_t)28
@@ -54,8 +57,7 @@
 #define EXT_FLASH_WP_PIN	(uint8_t)18
 #define EXT_FLASH_ON_PIN	(uint8_t)19
 
-/** BUTTON MODULE **/
-#define BUTTON_PIN			(uint8_t)20
+
 
 
 

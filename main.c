@@ -19,10 +19,14 @@
 
 void NVIC_Config()
 {
-	sd_nvic_SetPriority(UART0_IRQn, 1);
+	sd_nvic_SetPriority(UART0_IRQn, 3);
 	sd_nvic_EnableIRQ(UART0_IRQn);
+
 	sd_nvic_SetPriority(RTC1_IRQn, 1);
 	sd_nvic_EnableIRQ(RTC1_IRQn);
+
+	sd_nvic_SetPriority(SPI1_TWI1_IRQn, 1);
+	sd_nvic_EnableIRQ(SPI1_TWI1_IRQn);
 }
 
 void Periph_Config()
@@ -39,13 +43,30 @@ int main()
 	BLE_Init();
 	Advertising_Init();
 	NVIC_Config();
-
-	Advertising_Start();
 	RTC_Start();
+	uint8_t byte = 0x0F;
+	//Display_
+	for(uint8_t i=0; i<96; i++)
+	{
+		display_array[i*13] = i+1;
+		for(uint8_t j = 1; j<13; j++)
+			display_array[ i*13+ j] = byte;
+	}
+
+
+		for(uint8_t i=0; i<96;i++)
+		{
+			Display_Write_Line(i);
+			RTC_Wait(RTC_MS_TO_TICKS(5));
+			RTC_Wait(2);
+		}
+
+	//Advertising_Start();
+
 	UART_Enable();
 
 	UART_Start_Rx();
-	GPS_Turn_On();
+	//GPS_Turn_On();
 	uint32_t start_timestamp = RTC_Get_Timestamp();
 	while(gga_message.fix_indi == '0' || gga_message.fix_indi == 0)
 	{

@@ -39,6 +39,7 @@ void RTC1_IRQHandler()
 	if(NRF_RTC1->EVENTS_COMPARE[3])				/// Used for Display VCOM pin
 	{
 		NRF_RTC1->EVENTS_COMPARE[3] = 0;
+		NRF_RTC1->CC[3] += 1024;
 	}
 
 	if(NRF_RTC1->EVENTS_OVRFLW)
