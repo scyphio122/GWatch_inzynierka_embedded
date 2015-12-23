@@ -73,6 +73,9 @@ int main()
 			__WFE();
 	}
 
+	while(1)
+		__WFE();
+
 
 	uint32_t end_timestmap = RTC_Get_Timestamp();
 

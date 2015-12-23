@@ -28,7 +28,7 @@
 uint16_t 							m_conn_handle = BLE_CONN_HANDLE_INVALID;		/*< This variable holds an information whether the device is in BLE connection or not **/
 static ble_gap_adv_params_t			m_adv_params;
 ble_advdata_t 						m_advdata;
-static ble_uart_t					m_uart;
+
 
 /**@brief Function for error handling, which is called when an error has occurred.
  *
@@ -110,7 +110,7 @@ static void services_init()
 	//handler assignement
 	uart_init.evt_handler = Ble_Uart_Handler;
 
-	err_code = ble_uart_init(&m_uart, &uart_init);
+	err_code = ble_uart_init(&m_ble_uart, &uart_init);
 	APP_ERROR_CHECK(err_code);
 
 }
@@ -151,8 +151,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             sd_nvic_EnableIRQ(SWI1_IRQn);
 
-			//Advertising_Start();
-
+			Advertising_Start();
             break;
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
@@ -224,7 +223,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
 	//ble_advertising_on_ble_evt(p_ble_evt);
 	on_ble_evt(p_ble_evt);
-	ble_uart_on_ble_evt(&m_uart ,p_ble_evt);
+	ble_uart_on_ble_evt(&m_ble_uart ,p_ble_evt);
 }
 
 
