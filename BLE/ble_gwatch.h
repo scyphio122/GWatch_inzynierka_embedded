@@ -34,7 +34,7 @@
 
 
 #define ADVERTISING_DEVICE_NAME			"GWatch"
-#define GWATCH_UUID_BASE				{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+#define GWATCH_UUID_BASE				{(uint8_t)0xb0, (uint8_t)0x07, (uint8_t)0x20, (uint8_t)0xac, (uint8_t)0xca, (uint8_t)0x16, (uint8_t)0x20, (uint8_t)0x3c, (uint8_t)0xb9, (uint8_t)0xe7, (uint8_t)0x14, (uint8_t)0x72, (uint8_t)0x00, (uint8_t)0x00, (uint8_t)0x04, (uint8_t)0xac}
 extern uint16_t                         m_conn_handle;
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name);

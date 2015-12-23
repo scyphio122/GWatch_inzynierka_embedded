@@ -23,11 +23,12 @@
 #include <string.h>
 #include <sys/_stdint.h>
 #include "ble_advdata.h"
-
+#include "ble_uart.h"
 
 uint16_t 							m_conn_handle = BLE_CONN_HANDLE_INVALID;		/*< This variable holds an information whether the device is in BLE connection or not **/
 static ble_gap_adv_params_t			m_adv_params;
 ble_advdata_t 						m_advdata;
+static ble_uart_t					m_uart;
 
 /**@brief Function for error handling, which is called when an error has occurred.
  *
@@ -103,7 +104,14 @@ static void gap_params_init()
  */
 static void services_init()
 {
+    uint32_t 						err_code;
+	ble_uart_init_t					uart_init;
 
+	//handler assignement
+	uart_init.evt_handler = Ble_Uart_Handler;
+
+	err_code = ble_uart_init(&m_uart, &uart_init);
+	APP_ERROR_CHECK(err_code);
 
 }
 

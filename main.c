@@ -61,7 +61,7 @@ int main()
 			RTC_Wait(2);
 		}
 */
-	//Advertising_Start();
+	Advertising_Start();
 
 	UART_Enable();
 
@@ -73,7 +73,10 @@ int main()
 			__WFE();
 	}
 
+
 	uint32_t end_timestmap = RTC_Get_Timestamp();
+	while(1)
+		__WFE();
 	RTC_Wait(3);
 	return 0;
 }
