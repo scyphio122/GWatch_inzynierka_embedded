@@ -148,7 +148,7 @@ static uint32_t GPS_Checksum_Check(uint8_t* message, uint8_t calc_checksum)
 __attribute__((optimize("O0")))
 uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 {
-	uint8_t message_length = gps_msg_size;
+	uint8_t message_length = gps_msg_size - 2;
 	int8_t	currently_parsed_field_ind = -1;
 	uint8_t temp_byte = 0;
 	uint8_t temp_index = 0;
@@ -157,7 +157,6 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 	//if(!GPS_Checksum_Check(msg_copy, gps_msg_checksum))
 	//{
 		temp_index = 6;
-		message_length = gps_msg_size -8;	///	size minus msg header size and /r /n characters
 		do
 		{
 			///	If it is the separator, then continue
@@ -210,12 +209,12 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 				uint8_t field_size = 0;
 				while(msg_copy[temp_index + field_size] != ',')
 					field_size++;
-				memcpy(msg->sats_used, &msg_copy[temp_index], field_size);
+				memcpy(&msg->sats_used, &msg_copy[temp_index], field_size);
 				temp_index += field_size;
 				break;
 			}
 			case 7: /// HDOP
-				memcpy(msg->horizontal_dilution_of_precision, &msg_copy[temp_index], 4);
+				memcpy(&msg->horizontal_dilution_of_precision, &msg_copy[temp_index], 4);
 				temp_index += 4;
 				break;
 
@@ -224,7 +223,7 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 				uint8_t field_size = 0;
 				while(msg_copy[temp_index + field_size] != ',')
 					field_size++;
-				memcpy(msg->altitude, &msg_copy[temp_index], field_size);
+				memcpy(&msg->altitude, &msg_copy[temp_index], field_size);
 
 				temp_index += field_size;
 				break;
@@ -234,7 +233,7 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 				break;
 
 			case 10:
-				memcpy(msg->geoidal_separation, &msg_copy[temp_index], 4);
+				memcpy(&msg->geoidal_separation, &msg_copy[temp_index], 4);
 				temp_index += 4;
 				break;
 
@@ -247,13 +246,13 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 				uint8_t field_size = 0;
 				while(msg_copy[temp_index + field_size] != ',')
 					field_size++;
-				memcpy(msg->age_of_diff_corr, &msg_copy[temp_index], field_size);
+				memcpy(&msg->age_of_diff_corr, &msg_copy[temp_index], field_size);
 				temp_index += field_size;
 				break;
 			}
 			case 13: /// Checksum
 				++temp_index;
-				memcpy(msg->checksum, &msg_copy[temp_index], 2);
+				memcpy(&msg->checksum, &msg_copy[temp_index], 2);
 				temp_index += 2;
 				break;
 			}

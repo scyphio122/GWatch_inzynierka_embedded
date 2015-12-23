@@ -43,7 +43,7 @@ void UART0_IRQHandler()
 			gps_msg_checksum ^= data_byte;
 		if(data_byte == '\n')
 		{
-			gps_msg_size = gps_msg_byte_index;
+			gps_msg_size = gps_msg_byte_index + 1;
 			gps_msg_byte_index = 0;
 			gps_msg_received = 1;
 

@@ -44,7 +44,7 @@ int main()
 	Advertising_Init();
 	NVIC_Config();
 	RTC_Start();
-	uint8_t byte = 0x0F;
+/*	uint8_t byte = 0x0F;
 	//Display_
 	for(uint8_t i=0; i<96; i++)
 	{
@@ -60,13 +60,13 @@ int main()
 			RTC_Wait(RTC_MS_TO_TICKS(5));
 			RTC_Wait(2);
 		}
-
+*/
 	//Advertising_Start();
 
 	UART_Enable();
 
 	UART_Start_Rx();
-	//GPS_Turn_On();
+	GPS_Turn_On();
 	uint32_t start_timestamp = RTC_Get_Timestamp();
 	while(gga_message.fix_indi == '0' || gga_message.fix_indi == 0)
 	{
