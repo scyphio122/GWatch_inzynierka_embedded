@@ -75,8 +75,7 @@ int main()
 
 
 	uint32_t end_timestmap = RTC_Get_Timestamp();
-	while(1)
-		__WFE();
+
 	RTC_Wait(3);
 	return 0;
 }
