@@ -11,7 +11,9 @@
 #include "stdint-gcc.h"
 #include "RTC.h"
 
-
+/**
+ * \brief Enum for all of the messages sent by the GPS module through UART
+ */
 typedef enum
 {
 	TIME_POS_FIX_MSG = 0,
@@ -25,6 +27,20 @@ typedef enum
 	UNKNOWN_HEADER
 }gps_msg_header_e;
 
+/**
+ * \brief Enum for available types of GPS Position Fix
+ */
+typedef enum
+{
+	GPS_NO_FIX=0,
+	GPS_2D_FIX,
+	GPS_3D_FIX
+}gps_fix_type_e;
+
+
+/**
+ * \brief Enum for return messages (ACK) for GPS System commands
+ */
 typedef enum
 {
 	INVALID_COMMAND_PACKET = 0,
@@ -32,6 +48,7 @@ typedef enum
 	VALID_COMMAND_ACTION_FAILED,
 	VALID_COMMAND_ACTION_SUCCESS
 }gps_ack_msg_ret_val_e;
+
 
 typedef enum
 {
@@ -49,6 +66,7 @@ typedef struct
 	uint8_t 				command[3];
 	gps_ack_msg_ret_val_e 	ret_val;
 }gps_ack_msg_ret_val_t;
+
 typedef struct
 {
 	uint8_t 	deg[3];		/*< degrees **/
