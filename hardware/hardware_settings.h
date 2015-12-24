@@ -15,10 +15,10 @@
 #define UART_TX_PIN			(uint8_t)30
 #define UART_RX_PIN			(uint8_t)0
 
-/** SPI1 MODULE **/
-#define SPI1_MISO_PIN		(uint8_t)17
-#define SPI1_MOSI_PIN		(uint8_t)16
-#define SPI1_SCK_PIN		(uint8_t)15
+/** SPI0 MODULE **/
+#define SPI0_MISO_PIN		(uint8_t)17
+#define SPI0_MOSI_PIN		(uint8_t)16
+#define SPI0_SCK_PIN		(uint8_t)15
 
 /** DISPLAY SPI MODULE **/
 //#define SPI1_USED			(uint8_t)1
