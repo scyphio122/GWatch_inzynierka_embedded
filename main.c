@@ -73,9 +73,8 @@ int main()
 			__WFE();
 	}
 
-	while(1)
-		__WFE();
 
+	Ble_Uart_Notify_Central(0, &gga_message.fix_indi, 1);
 
 	uint32_t end_timestmap = RTC_Get_Timestamp();
 

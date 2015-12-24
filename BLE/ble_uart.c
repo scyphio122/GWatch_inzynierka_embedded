@@ -330,7 +330,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
  *  \param data - pointer to the data buffer
  *  \param data_size - size of data in the packet
  */
-static uint32_t Ble_Uart_Send_Single_Packet(ble_uart_t* p_uart, uint8_t* data, uint8_t data_size)
+static uint32_t Ble_Uart_Send_Single_Packet(ble_uart_t* p_uart, uint8_t* data, uint8_t actual_data_size)
 {
 	if(p_uart->conn_handle != BLE_CONN_HANDLE_INVALID)
 	    {
@@ -343,16 +343,16 @@ static uint32_t Ble_Uart_Send_Single_Packet(ble_uart_t* p_uart, uint8_t* data, u
 			memset(&value_params,0,sizeof(value_params));
 
 			/// Copy the message to the buffer
-			memcpy(ble_uart_tx_buffer+1, data, data_size);
+			memcpy(ble_uart_tx_buffer+1, data, actual_data_size);
 
 			//Fill structure with data size. This will avoid sending empty bytes when sending <20 bytes
-			value_params.len = data_size;
+			value_params.len = actual_data_size + 1;
 			value_params.offset = 0;
 			value_params.p_value = NULL;
 
 			err_code = sd_ble_gatts_value_set(p_uart->conn_handle, p_uart->tx_handles.value_handle, &value_params);
 
-			hvx_len = data_size;
+			hvx_len = actual_data_size + 1;
 	        hvx_params.handle = p_uart->tx_handles.value_handle;
 	        hvx_params.type   = BLE_GATT_HVX_INDICATION;
 	        hvx_params.offset = 0;
@@ -365,7 +365,7 @@ static uint32_t Ble_Uart_Send_Single_Packet(ble_uart_t* p_uart, uint8_t* data, u
 	    	///	Send the data
 	        err_code = sd_ble_gatts_hvx(p_uart->conn_handle, &hvx_params);
 
-	        ble_uart_tx_data_size -= data_size;
+	        ble_uart_tx_data_size -= actual_data_size;
 
 	        return NRF_SUCCESS;
 	    }
@@ -439,13 +439,13 @@ static uint32_t Ble_Uart_Notification_Single_Packet_Send(ble_uart_t* p_uart, uin
 			memcpy(ble_uart_tx_buffer+1, data, data_size);
 
 			//Fill structure with data size. This will avoid sending empty bytes when sending <20 bytes
-			value_params.len = data_size;
+			value_params.len = data_size + 1;
 			value_params.offset = 0;
 			value_params.p_value = NULL;
 
 			err_code = sd_ble_gatts_value_set(p_uart->conn_handle, p_uart->dev_events_handles.value_handle, &value_params);
 
-			hvx_len = data_size;
+			hvx_len = data_size + 1;
 	        hvx_params.handle = p_uart->dev_events_handles.value_handle;
 	        hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
 	        hvx_params.offset = 0;
@@ -478,22 +478,22 @@ static uint32_t Ble_Uart_Notify_Send_Next_Packet(ble_uart_t* p_uart)
 	return err_code;
 }
 
-uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t data_size)
+uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size)
 {
 	///	Set the flag to indicate that message is going to be sent
 	ble_tx_in_progress = 1;
 	///	Set the size of data which are to be sent
-	ble_uart_tx_data_size = data_size;
+	ble_uart_tx_data_size = actual_data_size;
 	///	Set the pointer to the data
 	ble_data_ptr = data;
 	///	Set the command code in the buffer
 	ble_uart_tx_buffer[0] = command_code;
 
 	///	If there is more than one message to send
-	if(data_size > 19)
+	if(actual_data_size > 19)
 		Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, 19);	///	Send the first packet (19 bytes, because the first one is command code)
 	else
-		Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, data_size);	///	If there is only 1 message to send
+		Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, actual_data_size);	///	If there is only 1 message to send
 
 	return NRF_SUCCESS;
 }
