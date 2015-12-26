@@ -13,6 +13,8 @@
 #include "nrf_error.h"
 #include "stdlib.h"
 #include "RTC.h"
+#include "gps.h"
+
 
 static uint32_t 		mem_org_next_free_key_address = MEM_ORG_KEY_AREA_START_ADDRESS;
 static uint32_t 	    mem_org_next_free_data_sample_address = MEM_ORG_DATA_AREA_START_ADDRESS;
@@ -38,7 +40,7 @@ static uint32_t Mem_Org_Key_Find_First_Free_On_Page(uint32_t page_address, uint3
 
 	do
 	{
-		memcpy(&temp_key, page_address, sizeof(uint32_t));
+		memcpy(&temp_key, (uint32_t*)page_address, sizeof(uint32_t));
 
 		if(temp_key == 0xFFFFFFFF)
 		{
@@ -47,13 +49,27 @@ static uint32_t Mem_Org_Key_Find_First_Free_On_Page(uint32_t page_address, uint3
 		}
 		else
 		{
+			mem_org_tracks_stored = (temp_key >> MEM_ORG_KEY_TRACK_NUMBER_SHIFT) & 0x7FFF;
 			page_address += 4;
 		}
 	}while(page_address < next_page_address);
 
-	*key_address = NULL;
+	*key_address = 0;
 	return NRF_ERROR_NOT_FOUND;
 }
+
+/**
+ * \brief This function returns the decoded data address which is held in the key
+ *
+ * \param key - the key to decode
+ *
+ * \return NRF_SUCCESS
+ */
+static inline uint32_t Mem_Org_Get_Key_Encoded_Address(uint32_t key)
+{
+	return (((key & 0xFFFF) << MEM_ORG_KEY_ADD_SHIFT) + MEM_ORG_DATA_AREA_START_ADDRESS);
+}
+
 
 /**
  * \brief This function searches entire KEY_AREA in order to find the first free cell
@@ -61,23 +77,80 @@ static uint32_t Mem_Org_Key_Find_First_Free_On_Page(uint32_t page_address, uint3
  * \return	NRF_SUCCESS - the key was found
  * 			NRF_ERROR_NOT_FOUND - the key wasn't found
  */
-uint32_t Mem_Org_Key_Find_First_Free()
+static uint32_t Mem_Org_Key_Find_First_Free()
 {
 	uint32_t ret_val = 0;
 	for(uint32_t i = MEM_ORG_KEY_AREA_START_ADDRESS; i< MEM_ORG_KEY_AREA_END_ADDRESS; i += 1024)
 	{
 		ret_val = Mem_Org_Key_Find_First_Free_On_Page(i, &mem_org_next_free_key_address);
 		if(ret_val == NRF_SUCCESS)
+		{
 			return NRF_SUCCESS;
+		}
 	}
 
 	return NRF_ERROR_NOT_FOUND;
 }
 
-uint32_t Mem_Org_Track_Address_Find_First_Free()
+static uint32_t Mem_Org_Track_Address_Find_First_Free()
 {
+	uint32_t err_code = 0;
+	uint32_t key;
+	///	Get the last key
+	err_code = Mem_Org_Find_Key(mem_org_tracks_stored, &key);
+	if(err_code == NRF_ERROR_NOT_FOUND)
+	{
+		mem_org_next_free_data_sample_address = MEM_ORG_DATA_AREA_START_ADDRESS;
+	}
+	else
+	{
+		uint32_t data_address = Mem_Org_Get_Key_Encoded_Address(key);
+		mem_org_flash_page_header_t header;
+		memcpy((uint32_t*)&header, (uint32_t*)data_address, sizeof(uint32_t));
 
-	return NRF_SUCCESS;
+		if(header.entry_size_in_bytes != 0xFFFF)
+		{
+			uint8_t flash_pages_used = header.entry_size_in_bytes/(MEM_ORG_DATA_SAMPLES_ON_INT_FLASH_PAGE*sizeof(mem_org_gps_sample_t));
+
+			mem_org_next_free_data_sample_address = data_address + (flash_pages_used + 1)*INTERNAL_FLASH_PAGE_SIZE;
+		}
+		else
+		{
+			uint32_t temp_add = data_address;
+			uint32_t temp = 0;
+			RTC_Timeout(RTC_S_TO_TICKS(3));
+			do
+			{
+				memcpy(&temp, temp_add + 4, sizeof(uint32_t));
+				if(temp == 0xFFFFFFFF)
+				{
+					mem_org_next_free_data_sample_address = data_address;
+					timeout_flag = 0;
+					RTC_Cancel_Timeout();
+					return NRF_SUCCESS;
+				}
+				else
+					temp_add += INTERNAL_FLASH_PAGE_SIZE;
+			}while(!timeout_flag);
+		}
+	}
+	timeout_flag = 0;
+	RTC_Cancel_Timeout();
+	return NRF_ERROR_INTERNAL;
+}
+
+uint32_t Mem_Org_Init()
+{
+	uint32_t err_code = 0;
+	err_code = Mem_Org_Key_Find_First_Free();
+	if(err_code == NRF_SUCCESS)
+	{
+		err_code = Mem_Org_Track_Address_Find_First_Free();
+		return NRF_SUCCESS;
+	}
+
+	return NRF_ERROR_INTERNAL;
+
 }
 
 /**
@@ -103,14 +176,14 @@ uint32_t Mem_Org_Store_Key(uint32_t address_to_data, uint16_t track_number)
 	do
 	{
 		///	Store the key
-		err_code = Int_Flash_Store_Dword(key, mem_org_next_free_key_address);
+		err_code = Int_Flash_Store_Dword(key, (uint32_t*)mem_org_next_free_key_address);
 
 		if(err_code == FLASH_OP_SUCCESS)
 		{
 			///	Clear the MSB
 			key = key & 0x7FFFFFFF;
 			///	Acknowledge the key
-			err_code = Int_Flash_Store_Dword(key, mem_org_next_free_key_address);
+			err_code = Int_Flash_Store_Dword(key, (uint32_t*)mem_org_next_free_key_address);
 			if(err_code == FLASH_OP_SUCCESS)
 			{
 				///	Increase the pointer to the next free address
@@ -146,13 +219,16 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 	uint8_t page_number = track_number / MEM_ORG_KEY_AREA_KEYS_ON_PAGE;
 	uint8_t key_on_page = track_number % MEM_ORG_KEY_AREA_KEYS_ON_PAGE;
 
-	uint8_t key = 0;
+	uint32_t key = 0;
 	uint16_t key_index = 0;
 	RTC_Timeout(RTC_S_TO_TICKS(2));
 	do
 	{
 		///	Get the key
 		memcpy(&key, MEM_ORG_KEY_AREA_START_ADDRESS + page_number*INTERNAL_FLASH_PAGE_SIZE + sizeof(mem_org_flash_page_header_t) + key_on_page*sizeof(uint32_t), sizeof(uint32_t));
+		if(key == 0xFFFFFFFF)
+			return NRF_ERROR_NOT_FOUND;
+
 		key_index = ((key >> MEM_ORG_KEY_TRACK_NUMBER_SHIFT) & 0x7FFF);
 		///	If it is the requested key
 		if(key_index == track_number)
@@ -188,17 +264,6 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 	return NRF_ERROR_INTERNAL;
 }
 
-/**
- * \brief This function returns the decoded data address which is held in the key
- *
- * \param key - the key to decode
- *
- * \return NRF_SUCCESS
- */
-static inline uint32_t Mem_Org_Get_Key_Encoded_Address(uint32_t key)
-{
-	return (key << MEM_ORG_KEY_ADD_SHIFT) + MEM_ORG_DATA_AREA_START_ADDRESS;
-}
 
 uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 {
@@ -224,7 +289,7 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 	{
 		if(mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE == 0)
 			mem_org_next_free_data_sample_address += sizeof(mem_org_flash_page_header_t);
-		err_code = Int_Flash_Store_Dword(*((uint32_t*)&sample + i), mem_org_next_free_data_sample_address);
+		err_code = Int_Flash_Store_Dword(*((uint32_t*)&sample + i), (uint32_t*)mem_org_next_free_data_sample_address);
 		mem_org_next_free_data_sample_address +=4;
 	}
 
@@ -256,7 +321,7 @@ uint32_t Mem_Org_Track_Stop_Storage()
 	mem_org_flash_page_header_t header;
 	header.entry_number = mem_org_tracks_stored;
 	header.entry_size_in_bytes = mem_org_track_size;
-	err_code = Int_Flash_Store_Dword(*((uint32_t*)&header), track_start_address);
+	err_code = Int_Flash_Store_Dword(*((uint32_t*)&header), (uint32_t*)track_start_address);
 
 	///	Set the addres to the next page
 	mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE)) + INTERNAL_FLASH_PAGE_SIZE;

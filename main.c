@@ -16,21 +16,12 @@
 #include "display.h"
 #include "ext_flash.h"
 #include "ble_uart.h"
+#include "libraries/memory_organization.h"
+
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-/**@brief Function for dispatching a system event to interested modules.
- *
- * @details This function is called from the System event interrupt handler after a system
- *          event has been received.
- *
- * @param[in]   sys_evt   System stack event.
- */
-static void sys_evt_dispatch(uint32_t sys_evt)
-{
-	pstorage_sys_event_handler(sys_evt);
-	SD_flash_operation_callback(sys_evt);
-}
+
 void NVIC_Config()
 {
 	sd_nvic_SetPriority(UART0_IRQn, 3);
@@ -51,6 +42,8 @@ void Periph_Config()
 	Display_Config();
 }
 
+#define NO_BLE
+
 int main()
 {
 	Periph_Config();
@@ -59,6 +52,17 @@ int main()
 	NVIC_Config();
 	RTC_Start();
 	Ext_Flash_Init();
+	Mem_Org_Init();
+
+	Mem_Org_Track_Start_Storage();
+	Mem_Org_Store_Sample(0x01234567);
+	Mem_Org_Store_Sample(0x89ABCDEF);
+	Mem_Org_Track_Stop_Storage();
+
+	Mem_Org_Track_Start_Storage();
+	Mem_Org_Store_Sample(0x01234567);
+	Mem_Org_Store_Sample(0x89ABCDEF);
+	Mem_Org_Track_Stop_Storage();
 
 #ifndef NO_BLE
 	Advertising_Start();
