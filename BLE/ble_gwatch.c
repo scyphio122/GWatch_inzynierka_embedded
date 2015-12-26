@@ -227,18 +227,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 }
 
 
-/**@brief Function for dispatching a system event to interested modules.
- *
- * @details This function is called from the System event interrupt handler after a system
- *          event has been received.
- *
- * @param[in]   sys_evt   System stack event.
- */
-static void sys_evt_dispatch(uint32_t sys_evt)
-{
-	pstorage_sys_event_handler(sys_evt);
-	SD_flash_operation_callback(sys_evt);
-}
+
 
 /**@brief Function for initializing the BLE stack.
  *

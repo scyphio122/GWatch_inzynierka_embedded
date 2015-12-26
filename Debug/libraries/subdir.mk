@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../libraries/fifo.c 
+../libraries/fifo.c \
+../libraries/memory_organization.c 
 
 OBJS += \
-./libraries/fifo.o 
+./libraries/fifo.o \
+./libraries/memory_organization.o 
 
 C_DEPS += \
-./libraries/fifo.d 
+./libraries/fifo.d \
+./libraries/memory_organization.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
