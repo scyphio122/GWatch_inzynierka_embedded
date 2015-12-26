@@ -15,7 +15,7 @@
 #include "nrf_soc.h"
 #include "display.h"
 #include "ext_flash.h"
-
+#include "ble_uart.h"
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 

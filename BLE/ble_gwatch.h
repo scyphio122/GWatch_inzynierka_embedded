@@ -42,5 +42,8 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name);
 
 /**@brief Function to initialize all BLE stuff */
 void BLE_Init();
+void Advertising_Init(void);
+void Advertising_Start();
+
 
 #endif /* BLE_BLE_GWATCH_H_ */
