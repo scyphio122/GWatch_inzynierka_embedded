@@ -19,4 +19,10 @@ extern uint8_t display_array[13*96];
 
 void Display_Config();
 
+void Display_Write_Line(uint8_t line_number);
+
+void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line);
+
+void Display_Test();
+
 #endif /* HARDWARE_DISPLAY_H_ */

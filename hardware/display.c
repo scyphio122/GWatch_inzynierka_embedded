@@ -101,4 +101,23 @@ void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 
 }
 
+void Display_Test()
+{
+		uint8_t byte = 0x0F;
+		//Display_
+		for(uint8_t i=0; i<96; i++)
+		{
+			display_array[i*13] = i+1;
+			for(uint8_t j = 1; j<13; j++)
+				display_array[ i*13+ j] = byte;
+		}
 
+
+			for(uint8_t i=0; i<96;i++)
+			{
+				Display_Write_Line(i);
+				RTC_Wait(RTC_MS_TO_TICKS(5));
+				RTC_Wait(2);
+			}
+
+}

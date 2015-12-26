@@ -19,6 +19,18 @@
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
+/**@brief Function for dispatching a system event to interested modules.
+ *
+ * @details This function is called from the System event interrupt handler after a system
+ *          event has been received.
+ *
+ * @param[in]   sys_evt   System stack event.
+ */
+static void sys_evt_dispatch(uint32_t sys_evt)
+{
+	pstorage_sys_event_handler(sys_evt);
+	SD_flash_operation_callback(sys_evt);
+}
 void NVIC_Config()
 {
 	sd_nvic_SetPriority(UART0_IRQn, 3);
@@ -48,30 +60,9 @@ int main()
 	RTC_Start();
 	Ext_Flash_Init();
 
-	Ext_Flash_Turn_On(EXT_FLASH_PROGRAM_OP);
-	Ext_Flash_Read_Status_Reg();
-
-	while(1)
-		__WFE();
-/*	uint8_t byte = 0x0F;
-	//Display_
-	for(uint8_t i=0; i<96; i++)
-	{
-		display_array[i*13] = i+1;
-		for(uint8_t j = 1; j<13; j++)
-			display_array[ i*13+ j] = byte;
-	}
-
-
-		for(uint8_t i=0; i<96;i++)
-		{
-			Display_Write_Line(i);
-			RTC_Wait(RTC_MS_TO_TICKS(5));
-			RTC_Wait(2);
-		}
-*/
-	/*Advertising_Start();
-
+#ifndef NO_BLE
+	Advertising_Start();
+#endif
 	UART_Enable();
 
 	UART_Start_Rx();
@@ -81,7 +72,7 @@ int main()
 	{
 			__WFE();
 	}
-*/
+
 	Ble_Uart_Notify_Central(0, &gga_message.fix_indi, 1);
 
 
