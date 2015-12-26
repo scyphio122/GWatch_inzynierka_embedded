@@ -11,6 +11,7 @@ C_SRCS += \
 ../hardware/WATCHDOG.c \
 ../hardware/adc.c \
 ../hardware/display.c \
+../hardware/ext_flash.c \
 ../hardware/spi.c \
 ../hardware/timer.c 
 
@@ -22,6 +23,7 @@ OBJS += \
 ./hardware/WATCHDOG.o \
 ./hardware/adc.o \
 ./hardware/display.o \
+./hardware/ext_flash.o \
 ./hardware/spi.o \
 ./hardware/timer.o 
 
@@ -33,6 +35,7 @@ C_DEPS += \
 ./hardware/WATCHDOG.d \
 ./hardware/adc.d \
 ./hardware/display.d \
+./hardware/ext_flash.d \
 ./hardware/spi.d \
 ./hardware/timer.d 
 

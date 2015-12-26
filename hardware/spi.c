@@ -236,7 +236,7 @@ inline void SPI_Deassert_CS(uint8_t cs_pin)
 	NRF_GPIO->OUTSET = 1 << cs_pin;
 }
 
-__attribute__((optimize("O2")))
+__attribute__((optimize("O0")))
 uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI, unsigned char* data_to_send, uint16_t data_size, unsigned char* rx_buffer, uint16_t rx_size, uint8_t cs_pin)
 {
 	if(SPI == NRF_SPI0)
@@ -259,7 +259,7 @@ uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI, unsigned char* data_to_send, u
 		spi_1_rx_index = 0;
 	}
 #endif
-	SPI->INTENCLR = SPI_INTENCLR_READY_Msk;
+	//NRF_SPI0->INTENSET = SPI_INTENSET_READY_Enabled<<SPI_INTENSET_READY_Pos;
 	/// Enable peripheral
 	SPI->ENABLE = 1;
 	///	Clear (assert) the Chip Select
@@ -267,11 +267,13 @@ uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI, unsigned char* data_to_send, u
 
 	spi_transfer_ongoing_flag = 1;
 	SPI_Execute_Transaction(SPI);
-	///	Disable the SPI module
-	SPI->ENABLE = 0;
+
 	spi_transfer_ongoing_flag = 0;
 	///	Deassert (set in high state) CS pin
 	SPI_Deassert_CS(cs_pin);
+
+	///	Disable the SPI module
+	SPI->ENABLE = 0;
 
 	return NRF_SUCCESS;
 }

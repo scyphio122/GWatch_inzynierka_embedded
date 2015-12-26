@@ -14,6 +14,8 @@
 #include "ble_gwatch.h"
 #include "nrf_soc.h"
 #include "display.h"
+#include "ext_flash.h"
+
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -44,6 +46,13 @@ int main()
 	Advertising_Init();
 	NVIC_Config();
 	RTC_Start();
+	Ext_Flash_Init();
+
+	Ext_Flash_Turn_On(EXT_FLASH_PROGRAM_OP);
+	Ext_Flash_Read_Status_Reg();
+
+	while(1)
+		__WFE();
 /*	uint8_t byte = 0x0F;
 	//Display_
 	for(uint8_t i=0; i<96; i++)
@@ -61,7 +70,7 @@ int main()
 			RTC_Wait(2);
 		}
 */
-	Advertising_Start();
+	/*Advertising_Start();
 
 	UART_Enable();
 
@@ -72,9 +81,9 @@ int main()
 	{
 			__WFE();
 	}
-
-
+*/
 	Ble_Uart_Notify_Central(0, &gga_message.fix_indi, 1);
+
 
 	uint32_t end_timestmap = RTC_Get_Timestamp();
 
