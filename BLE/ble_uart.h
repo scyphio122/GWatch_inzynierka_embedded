@@ -131,15 +131,19 @@ typedef struct
 
 typedef enum
 {
-	BLE_TIMESTAMP_SET_CMD = (uint8_t)0,
-	BLE_TIMESTAMP_GET_CMD = (uint8_t)1,
-	BLE_GET_GPS_POS_CMD = (uint8_t)2,
-	BLE_GET_GPS_VELOCITY = (uint8_t)3,
-	BLE_INDICATE_GPS_FIX = (uint8_t)4,
-	BLE_GET_HISTORY_TRACK = (uint8_t)5,
-	BLE_GET_AVAILABLE_TRACKS = (uint8_t)6,
-	BLE_GET_BAT_VOLT = (uint8_t)7,
-	BLE_TRANSMISSION_TEST = (uint8_t)8
+	BLE_TIMESTAMP_SET_CMD				 	= (uint8_t)0,
+	BLE_TIMESTAMP_GET_CMD 					= (uint8_t)1,
+	BLE_GET_GPS_POS_CMD 					= (uint8_t)2,
+	BLE_GET_GPS_VELOCITY 					= (uint8_t)3,
+	BLE_INDICATE_GPS_FIX 					= (uint8_t)4,
+	BLE_GET_SATTELITES_USED					= (uint8_t)12,
+	BLE_GET_HISTORY_TRACK 					= (uint8_t)5,
+	BLE_GET_AVAILABLE_TRACKS 				= (uint8_t)6,
+	BLE_GET_BAT_VOLT 						= (uint8_t)7,
+	BLE_TRANSMISSION_TEST 					= (uint8_t)8,
+	BLE_ENABLE_GPS_SAMPLES_STORAGE 			= (uint8_t)9,
+	BLE_DISABLE_GPS_SAMPLES_STORAGE 		= (uint8_t)10,
+	BLE_CLEAR_TRACK_MEMORY					= (uint8_t)11,
 
 }ble_uart_commands_e;
 

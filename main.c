@@ -42,7 +42,7 @@ void Periph_Config()
 	Display_Config();
 }
 
-#define NO_BLE
+//#define NO_BLE
 
 int main()
 {
@@ -57,7 +57,7 @@ int main()
 
 
 
-	Mem_Org_Track_Start_Storage();
+	/*Mem_Org_Track_Start_Storage();
 	Mem_Org_Store_Sample(0x01234567);
 	Mem_Org_Store_Sample(0x89ABCDEF);
 	Mem_Org_Track_Stop_Storage();
@@ -80,7 +80,7 @@ int main()
 	err_code = Mem_Org_Find_Key(9, &key);
 	err_code = Mem_Org_Find_Key(10, &key);
 	err_code = Mem_Org_Find_Key(11, &key);
-//		Mem_Org_Clear_Tracks_Memory();
+//		Mem_Org_Clear_Tracks_Memory();*/
 #ifndef NO_BLE
 	Advertising_Start();
 #endif
@@ -88,17 +88,31 @@ int main()
 
 	UART_Start_Rx();
 	GPS_Turn_On();
-	uint32_t start_timestamp = RTC_Get_Timestamp();
+	/*uint32_t start_timestamp = RTC_Get_Timestamp();
 	while(gga_message.fix_indi == '0' || gga_message.fix_indi == 0)
 	{
 			__WFE();
 	}
 
-	Ble_Uart_Notify_Central(0, &gga_message.fix_indi, 1);
+	//Ble_Uart_Notify_Central(0, &gga_message.fix_indi, 1);
 
 
 	uint32_t end_timestmap = RTC_Get_Timestamp();
 
-	RTC_Wait(3);
+	RTC_Wait(3);*/
+
+	while(1)
+	{
+		if(gps_sample_storage_time)
+		{
+			if((gps_sample_nr % mem_org_gps_sample_storage_interval == 0) && (mem_org_track_samples_storage_enabled == 1))
+			{
+				Mem_Org_Store_Sample(gps_sample_timestmap);
+			}
+			gps_sample_storage_time = 0;
+		}
+		__WFE();
+	}
+
 	return 0;
 }

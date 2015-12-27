@@ -38,6 +38,8 @@ typedef struct
 #define MEM_ORG_KEY_ADD_SHIFT						(uint8_t)5
 #define MEM_ORG_KEY_TRACK_NUMBER_SHIFT				(uint8_t)16
 
+extern volatile uint8_t		mem_org_track_samples_storage_enabled;
+extern uint8_t 				mem_org_gps_sample_storage_interval;
 
 uint32_t Mem_Org_Init();
 uint32_t Mem_Org_Store_Key(uint32_t address_to_data, uint16_t track_number);

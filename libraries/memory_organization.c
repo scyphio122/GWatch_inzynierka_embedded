@@ -19,8 +19,9 @@
 static uint32_t 		mem_org_next_free_key_address = MEM_ORG_KEY_AREA_START_ADDRESS;
 static uint32_t 	    mem_org_next_free_data_sample_address = MEM_ORG_DATA_AREA_START_ADDRESS;
 static uint16_t			mem_org_tracks_stored = 0;
-static volatile uint8_t mem_org_track_samples_storage_enabled = 0;
+volatile uint8_t		mem_org_track_samples_storage_enabled = 0;
 static uint16_t         mem_org_track_size;
+uint8_t 				mem_org_gps_sample_storage_interval = 5;
 /**
  * \brief This function finds the first free key address pn the page (if existing)
  *
@@ -345,6 +346,7 @@ uint32_t Mem_Org_Clear_Tracks_Memory()
 	{
 		Int_Flash_Erase_Page(i);
 	}
+	return NRF_SUCCESS;
 }
 
 

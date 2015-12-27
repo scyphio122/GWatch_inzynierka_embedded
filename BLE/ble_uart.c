@@ -38,6 +38,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/_stdint.h>
+#include "libraries/memory_organization.h"
+#include "GPS.h"
 
 /**@brief Buffer to hold data to send via TX. */
 static volatile bool		ble_tx_packet_in_progress = false;		/**< Mutex on single packet HVX transmission */
@@ -275,6 +277,7 @@ void Ble_Uart_Wait_For_Transmission_End()
 static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 {
 	uint8_t request_code = p_data[0];
+	uint32_t err_code = 0;
 
 	switch(request_code)
 	{
@@ -302,6 +305,48 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_GET_AVAILABLE_TRACKS:
 		{
+			break;
+		}
+		case BLE_ENABLE_GPS_SAMPLES_STORAGE:
+		{
+			uint8_t err = 0;
+			if(!mem_org_track_samples_storage_enabled)
+			{
+				Mem_Org_Track_Start_Storage();
+				err = NRF_SUCCESS;
+			}
+			else
+			{
+				err = NRF_ERROR_INVALID_STATE;
+			}
+			Ble_Uart_Data_Send(BLE_ENABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err));
+			break;
+		}
+		case BLE_DISABLE_GPS_SAMPLES_STORAGE:
+		{
+			uint8_t err = 0;
+			if(mem_org_track_samples_storage_enabled)
+			{
+				Mem_Org_Track_Stop_Storage();
+				err = NRF_SUCCESS;
+			}
+			else
+			{
+				 err = NRF_ERROR_INVALID_STATE;
+			}
+			Ble_Uart_Data_Send(BLE_DISABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err));
+			break;
+		}
+		case BLE_GET_SATTELITES_USED:
+		{
+			Ble_Uart_Data_Send(BLE_GET_SATTELITES_USED, &gga_message.sats_used, sizeof(gga_message.sats_used));
+		}
+		case BLE_CLEAR_TRACK_MEMORY:
+		{
+			Mem_Org_Clear_Tracks_Memory();
+			Mem_Org_Init();
+			uint8_t ret_code = NRF_SUCCESS;
+			Ble_Uart_Data_Send(BLE_CLEAR_TRACK_MEMORY, &ret_code, sizeof(ret_code));
 			break;
 		}
 		case BLE_GET_BAT_VOLT:

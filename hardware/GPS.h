@@ -98,6 +98,10 @@ extern volatile uint8_t 		gps_msg_received;
 extern uint8_t					gps_msg_size;
 uint16_t						gps_msg_checksum;
 extern gps_gga_msg_t 			gga_message;
+extern volatile uint8_t			gps_sample_storage_time;
+extern uint32_t					gps_sample_nr;
+extern uint32_t					gps_sample_timestmap;
+
 void 		GPS_Init();
 void 		GPS_Turn_On();
 void 		GPS_Turn_Off();

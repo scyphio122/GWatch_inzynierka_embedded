@@ -18,6 +18,10 @@ uint8_t						gps_msg_size;
 volatile uint8_t 			gps_msg_received;
 uint16_t					gps_msg_checksum;
 gps_gga_msg_t				gga_message;
+volatile uint8_t			gps_sample_storage_time;
+uint32_t					gps_sample_nr;
+uint32_t					gps_sample_timestmap;
+
 /**
  * This function initializes the GPS pins
  */
@@ -201,9 +205,15 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 				break;
 
 			case 5:	///	Position fix indi
+			{
+				uint8_t previous_fix = msg->fix_indi;
 				msg->fix_indi = msg_copy[temp_index++];
-				break;
 
+				///	If the current fix state is different than the previous one, then notify the central aobut the fix change
+				if(msg->fix_indi != previous_fix)
+					Ble_Uart_Notify_Central(0, &msg->fix_indi, sizeof(msg->fix_indi));
+				break;
+			}
 			case 6: /// Satellites used
 			{
 				uint8_t field_size = 0;
@@ -259,6 +269,8 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 
 		}while(temp_index < message_length);
 
+		gps_sample_timestmap = RTC_Get_Timestamp();
+		gps_sample_nr++;
 		return NRF_SUCCESS;
 
 //	}
