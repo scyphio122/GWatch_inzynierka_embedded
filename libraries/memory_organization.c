@@ -14,7 +14,7 @@
 #include "stdlib.h"
 #include "RTC.h"
 #include "gps.h"
-
+#include "ble_uart.h"
 
 static uint32_t 		mem_org_next_free_key_address = MEM_ORG_KEY_AREA_START_ADDRESS;
 static uint32_t 	    mem_org_next_free_data_sample_address = MEM_ORG_DATA_AREA_START_ADDRESS;
@@ -69,6 +69,18 @@ static uint32_t Mem_Org_Key_Find_First_Free_On_Page(uint32_t page_address, uint3
 static inline uint32_t Mem_Org_Get_Key_Encoded_Address(uint32_t key)
 {
 	return (((key & 0xFFFF) << MEM_ORG_KEY_ADD_SHIFT) + MEM_ORG_DATA_AREA_START_ADDRESS);
+}
+
+/**
+ * \brief This function returns the track number encoded in the given key
+ *
+ * \param key - the key to decode
+ *
+ * \return the track number
+ */
+static inline uint32_t Mem_Org_Get_Key_Encoded_Track_Number(uint32_t key)
+{
+	return (key & 0x7FFF0000) >> MEM_ORG_KEY_TRACK_NUMBER_SHIFT;
 }
 
 
@@ -347,6 +359,67 @@ uint32_t Mem_Org_Clear_Tracks_Memory()
 		Int_Flash_Erase_Page(i);
 	}
 	return NRF_SUCCESS;
+}
+
+/**
+ * \brief This function sends via BLE list of all available tracks with with their timestamp. It sends first the total number of available tracks. Then it sends track number and track start timestamp in one packet.
+ *  Each packet corresponds to the single track entry.
+ *
+ *  \return 	NRF_SUCCESS - no error occurred
+ *  			NRF_ERROR_NOT_FOUNT - an empty key was reached
+ *  			NRF_ERROR_INTERNAL - timeout was triggered
+ */
+uint32_t Mem_Org_List_Tracks_Through_BLE()
+{
+
+	uint32_t temp_address = MEM_ORG_KEY_AREA_START_ADDRESS;
+	uint32_t temp_key = 0;
+	uint16_t temp_track_number = 0;
+	uint8_t  data_buffer[6];
+	uint32_t encoded_address = 0;
+	RTC_Timeout(RTC_S_TO_TICKS(2));
+
+	///	Send the packet informing how many available tracks there is
+	Ble_Uart_Data_Send(BLE_GET_AVAILABLE_TRACKS, &mem_org_tracks_stored, sizeof(mem_org_tracks_stored), false);
+
+	do
+	{
+		memcpy(&temp_key, (uint32_t*)temp_address, sizeof(uint32_t));
+
+		if(temp_key != 0xFFFFFFFF)
+		{
+			temp_track_number = Mem_Org_Get_Key_Encoded_Track_Number(temp_key);
+			if(temp_track_number <= mem_org_tracks_stored)
+			{
+				///	Put the track number in the buffer
+				memcpy(&data_buffer[0], &temp_track_number, sizeof(temp_track_number));
+				///	Get the track timestamp
+				encoded_address = Mem_Org_Get_Key_Encoded_Address(temp_key);
+				///	Put the timestamp in the buffer
+				memcpy(&data_buffer[2], (uint32_t*)(encoded_address + sizeof(mem_org_flash_page_header_t)), sizeof(uint32_t));
+
+				///	Send the track number and track timestamp
+				Ble_Uart_Data_Send(BLE_GET_AVAILABLE_TRACKS, data_buffer, sizeof(data_buffer), false);
+				///	Increase the
+				temp_address += 4;
+				if(temp_address % INTERNAL_FLASH_PAGE_SIZE == 0)
+					temp_address += sizeof(mem_org_flash_page_header_t);
+			}
+			else
+			{
+				RTC_Cancel_Timeout();
+				return NRF_SUCCESS;
+			}
+		}
+		else
+		{
+			RTC_Cancel_Timeout();
+			return NRF_ERROR_NOT_FOUND;
+		}
+	}while(!timeout_flag);
+	RTC_Cancel_Timeout();
+	timeout_flag = 0;
+	return NRF_ERROR_INTERNAL;
 }
 
 

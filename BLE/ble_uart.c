@@ -289,10 +289,20 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_TIMESTAMP_GET_CMD:
 		{
+			uint32_t timestamp = RTC_Get_Timestamp();
+			Ble_Uart_Data_Send(BLE_TIMESTAMP_GET_CMD, (uint8_t*)&timestamp, sizeof(timestamp), false);
 			break;
 		}
 		case BLE_GET_GPS_POS_CMD:
 		{
+			///	Send the current position. Because of its size it must be sent in 3 packages
+			///	Send Latitude first
+			Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.latitude, sizeof(gga_message.latitude) + sizeof(gga_message.latitude_indi), false);
+			///	SenD Longtitude
+			Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.longtitude, sizeof(gga_message.longtitude) + sizeof(gga_message.latitude_indi), false);
+			///	Send Altitude
+			Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.altitude, sizeof(gga_message.altitude) + sizeof(gga_message.altitude_unit), false);
+
 			break;
 		}
 		case BLE_GET_GPS_VELOCITY:
@@ -305,6 +315,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_GET_AVAILABLE_TRACKS:
 		{
+			Mem_Org_List_Tracks_Through_BLE();
 			break;
 		}
 		case BLE_ENABLE_GPS_SAMPLES_STORAGE:
@@ -340,6 +351,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		case BLE_GET_SATTELITES_USED:
 		{
 			Ble_Uart_Data_Send(BLE_GET_SATTELITES_USED, &gga_message.sats_used, sizeof(gga_message.sats_used), false);
+			break;
 		}
 		case BLE_CLEAR_TRACK_MEMORY:
 		{

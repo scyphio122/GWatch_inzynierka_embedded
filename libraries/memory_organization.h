@@ -48,4 +48,5 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp);
 uint32_t Mem_Org_Track_Start_Storage();
 uint32_t Mem_Org_Track_Stop_Storage();
 uint32_t Mem_Org_Clear_Tracks_Memory();
+uint32_t Mem_Org_List_Tracks_Through_BLE();
 #endif /* LIBRARIES_MEMORY_ORGANIZATION_H_ */
