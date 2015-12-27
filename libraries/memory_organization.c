@@ -216,8 +216,8 @@ uint32_t Mem_Org_Store_Key(uint32_t address_to_data, uint16_t track_number)
  */
 uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 {
-	uint8_t page_number = track_number / MEM_ORG_KEY_AREA_KEYS_ON_PAGE;
-	uint8_t key_on_page = track_number % MEM_ORG_KEY_AREA_KEYS_ON_PAGE;
+	uint8_t page_number = (track_number - 1) / MEM_ORG_KEY_AREA_KEYS_ON_PAGE;
+	uint8_t key_on_page = (track_number - 1) % MEM_ORG_KEY_AREA_KEYS_ON_PAGE;
 
 	uint32_t key = 0;
 	uint16_t key_index = 0;
@@ -301,6 +301,7 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 
 uint32_t Mem_Org_Track_Start_Storage()
 {
+	mem_org_tracks_stored++;
 	///	Store the key
 	uint32_t err_code = Mem_Org_Store_Key(mem_org_next_free_data_sample_address, mem_org_tracks_stored);
 
@@ -329,6 +330,22 @@ uint32_t Mem_Org_Track_Stop_Storage()
 	mem_org_tracks_stored++;
 
 	return NRF_SUCCESS;
+}
+
+/**
+ * \brief This function clear entire KEY and DATA areas
+ */
+uint32_t Mem_Org_Clear_Tracks_Memory()
+{
+	for(uint32_t i=MEM_ORG_KEY_AREA_START_ADDRESS; i<MEM_ORG_KEY_AREA_END_ADDRESS; i += INTERNAL_FLASH_PAGE_SIZE)
+	{
+		Int_Flash_Erase_Page(i);
+	}
+
+	for(uint32_t i=MEM_ORG_DATA_AREA_START_ADDRESS; i < MEM_ORG_DATA_AREA_END_ADDRESS; i += INTERNAL_FLASH_PAGE_SIZE)
+	{
+		Int_Flash_Erase_Page(i);
+	}
 }
 
 

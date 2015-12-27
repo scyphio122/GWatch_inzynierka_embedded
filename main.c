@@ -52,7 +52,10 @@ int main()
 	NVIC_Config();
 	RTC_Start();
 	Ext_Flash_Init();
+//	Mem_Org_Clear_Tracks_Memory();
 	Mem_Org_Init();
+
+
 
 	Mem_Org_Track_Start_Storage();
 	Mem_Org_Store_Sample(0x01234567);
