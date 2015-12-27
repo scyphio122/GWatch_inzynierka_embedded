@@ -326,9 +326,8 @@ uint32_t Mem_Org_Track_Stop_Storage()
 
 	///	Set the addres to the next page
 	mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE)) + INTERNAL_FLASH_PAGE_SIZE;
-	///	Increase the stored track counter
-	mem_org_tracks_stored++;
-
+	///	Clear the track size variable
+	mem_org_track_size = 0;
 	return NRF_SUCCESS;
 }
 

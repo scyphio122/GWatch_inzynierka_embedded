@@ -52,7 +52,7 @@ int main()
 	NVIC_Config();
 	RTC_Start();
 	Ext_Flash_Init();
-//	Mem_Org_Clear_Tracks_Memory();
+
 	Mem_Org_Init();
 
 
@@ -67,6 +67,20 @@ int main()
 	Mem_Org_Store_Sample(0x89ABCDEF);
 	Mem_Org_Track_Stop_Storage();
 
+	uint32_t key = 0;
+	uint32_t err_code = 0;
+	err_code = Mem_Org_Find_Key(1, &key);
+	err_code = Mem_Org_Find_Key(2, &key);
+	err_code = Mem_Org_Find_Key(3, &key);
+	err_code = Mem_Org_Find_Key(4, &key);
+	err_code = Mem_Org_Find_Key(5, &key);
+	err_code = Mem_Org_Find_Key(6, &key);
+	err_code = Mem_Org_Find_Key(7, &key);
+	err_code = Mem_Org_Find_Key(8, &key);
+	err_code = Mem_Org_Find_Key(9, &key);
+	err_code = Mem_Org_Find_Key(10, &key);
+	err_code = Mem_Org_Find_Key(11, &key);
+//		Mem_Org_Clear_Tracks_Memory();
 #ifndef NO_BLE
 	Advertising_Start();
 #endif
