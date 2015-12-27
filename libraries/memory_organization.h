@@ -47,4 +47,5 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf);
 uint32_t Mem_Org_Store_Sample(uint32_t timestamp);
 uint32_t Mem_Org_Track_Start_Storage();
 uint32_t Mem_Org_Track_Stop_Storage();
+uint32_t Mem_Org_Clear_Tracks_Memory();
 #endif /* LIBRARIES_MEMORY_ORGANIZATION_H_ */

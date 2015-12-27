@@ -49,7 +49,7 @@ static uint8_t 				ble_uart_rx_buffer[20];					/**< Buffer for incomming from ce
 static volatile uint16_t	ble_uart_tx_data_size;					/**< Size of data which are to be send */
 static uint8_t*				ble_data_ptr;							/**< Pointer where the data will be stored. It will be dynamically allocated buffer */
 ble_uart_t					m_ble_uart;
-
+static volatile uint8_t		ble_uart_data_dynamically_allocated;
 /**@brief Function for handling the Connect event.
  *
  * @param[in]   p_uart       Blood Pressure Service structure.
@@ -319,7 +319,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			{
 				err = NRF_ERROR_INVALID_STATE;
 			}
-			Ble_Uart_Data_Send(BLE_ENABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err));
+			Ble_Uart_Data_Send(BLE_ENABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err), false);
 			break;
 		}
 		case BLE_DISABLE_GPS_SAMPLES_STORAGE:
@@ -334,19 +334,19 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			{
 				 err = NRF_ERROR_INVALID_STATE;
 			}
-			Ble_Uart_Data_Send(BLE_DISABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err));
+			Ble_Uart_Data_Send(BLE_DISABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err), false);
 			break;
 		}
 		case BLE_GET_SATTELITES_USED:
 		{
-			Ble_Uart_Data_Send(BLE_GET_SATTELITES_USED, &gga_message.sats_used, sizeof(gga_message.sats_used));
+			Ble_Uart_Data_Send(BLE_GET_SATTELITES_USED, &gga_message.sats_used, sizeof(gga_message.sats_used), false);
 		}
 		case BLE_CLEAR_TRACK_MEMORY:
 		{
 			Mem_Org_Clear_Tracks_Memory();
 			Mem_Org_Init();
 			uint8_t ret_code = NRF_SUCCESS;
-			Ble_Uart_Data_Send(BLE_CLEAR_TRACK_MEMORY, &ret_code, sizeof(ret_code));
+			Ble_Uart_Data_Send(BLE_CLEAR_TRACK_MEMORY, &ret_code, sizeof(ret_code), false);
 			break;
 		}
 		case BLE_GET_BAT_VOLT:
@@ -359,7 +359,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			uint8_t* test_data = malloc(sizeof(text));
 			memcpy(test_data, text, sizeof(text));
 			//Ble_Uart_Data_Send(8, test_data, sizeof(text));
-			Ble_Uart_Notify_Central(8, test_data, sizeof(text));
+			Ble_Uart_Notify_Central(8, test_data, sizeof(text), true);
 			//Ble_Uart_Wait_Till_Transmission_In_Progress();
 			//RTC_Wait(1);
 		}
@@ -374,6 +374,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
  *  \param p_uart - pointer to the uart service structure, which will be used to send data
  *  \param data - pointer to the data buffer
  *  \param data_size - size of data in the packet
+ *
  */
 static uint32_t Ble_Uart_Send_Single_Packet(ble_uart_t* p_uart, uint8_t* data, uint8_t actual_data_size)
 {
@@ -427,8 +428,9 @@ static uint32_t Ble_Uart_Send_Single_Packet(ble_uart_t* p_uart, uint8_t* data, u
  *  \param command_code - the 1 byte of command code which will recognize the type of data which are being sent. It is always the first byte of each packet
  *  \param data - pointer to the buffer with data which are to be sent. It should exist until the transmission ends. IT MUST BE DYNAMICALLY ALLOCATED
  *  \param data_size - size of data which are to be sent
+ *  \param data_buf_dynamically_allocated - 1 if the buffer is created with malloc function, 0 if it lies on stack
  */
-uint32_t Ble_Uart_Data_Send(uint8_t command_code, uint8_t* data, uint16_t data_size)
+uint32_t Ble_Uart_Data_Send(uint8_t command_code, uint8_t* data, uint16_t data_size, uint8_t data_buf_dynamically_allocated)
 {
 	///	Set the flag to indicate that message is going to be sent
 	ble_tx_in_progress = 1;
@@ -438,7 +440,8 @@ uint32_t Ble_Uart_Data_Send(uint8_t command_code, uint8_t* data, uint16_t data_s
 	ble_data_ptr = data;
 	///	Set the command code in the buffer
 	ble_uart_tx_buffer[0] = command_code;
-
+	///	Set the buffer allocation flasg
+	ble_uart_data_dynamically_allocated = data_buf_dynamically_allocated;
 	///	If there is more than one message to send
 	if(data_size > 19)
 		Ble_Uart_Send_Single_Packet(&m_ble_uart, data, 19);	///	Send the first packet (19 bytes, because the first one is command code)
@@ -523,7 +526,7 @@ static uint32_t Ble_Uart_Notify_Send_Next_Packet(ble_uart_t* p_uart)
 	return err_code;
 }
 
-uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size)
+uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size, uint8_t data_buf_dynamically_allocated)
 {
 	///	Set the flag to indicate that message is going to be sent
 	ble_tx_in_progress = 1;
@@ -533,7 +536,8 @@ uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t a
 	ble_data_ptr = data;
 	///	Set the command code in the buffer
 	ble_uart_tx_buffer[0] = command_code;
-
+	///	Set the buffer allocation flasg
+	ble_uart_data_dynamically_allocated = data_buf_dynamically_allocated;
 	///	If there is more than one message to send
 	if(actual_data_size > 19)
 		Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, 19);	///	Send the first packet (19 bytes, because the first one is command code)
@@ -562,8 +566,11 @@ void Ble_Uart_Handler(ble_uart_t * p_uart, ble_uart_evt_t * p_evt, ble_uart_data
         	   Ble_Uart_Send_Next_Packet(p_uart);
            else
            {
-        	   ///	Free the data resources
-        	   free(ble_data_ptr);
+        	   if(ble_uart_data_dynamically_allocated)
+        	   {
+				   ///	Free the data resources
+				   free(ble_data_ptr);
+        	   }
         	   ble_tx_in_progress = false;
            }
             break;
@@ -579,8 +586,11 @@ void Ble_Uart_Handler(ble_uart_t * p_uart, ble_uart_evt_t * p_evt, ble_uart_data
          	   Ble_Uart_Notify_Send_Next_Packet(p_uart);
             else
             {
-         	   ///	Free the data resources
-         	   free(ble_data_ptr);
+         	   if(ble_uart_data_dynamically_allocated)
+         	   {
+ 				   ///	Free the data resources
+ 				   free(ble_data_ptr);
+         	   }
          	   ble_tx_in_progress = false;
             }
         	break;

@@ -158,13 +158,13 @@ void 		ble_uart_on_ble_evt(ble_uart_t * p_uart, ble_evt_t * p_ble_evt);
 
 uint32_t 	ble_uart_is_indication_enabled(ble_uart_t * p_uart, bool * p_indication_enabled);
 
-uint32_t 	Ble_Uart_Data_Send(uint8_t command_code, uint8_t* data, uint16_t actual_data_size);
+uint32_t 	Ble_Uart_Data_Send(uint8_t command_code, uint8_t* data, uint16_t actual_data_size, uint8_t data_buf_dynamically_allocated);
 
 void		Ble_Uart_Wait_For_Transmission_End();
 
 void 		Ble_Uart_Handler(ble_uart_t * p_uart, ble_uart_evt_t * p_evt, ble_uart_data_t p_data, uint8_t data_size);
 
-uint32_t 	Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size);
+uint32_t 	Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size, uint8_t data_buf_dynamically_allocated);
 
 uint32_t 	ble_uart_is_notification_enabled(ble_uart_t * p_uart, bool * p_indication_enabled);
 /** @} */
