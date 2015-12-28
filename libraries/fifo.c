@@ -6,7 +6,7 @@
  */
 #include "app_fifo.h"
 #include "fifo.h"
-
+#include "stdbool.h"
 
 uint32_t fifo_length(app_fifo_t * p_fifo)
 {
@@ -58,4 +58,20 @@ inline void Fifo_Get(app_fifo_t* fifo, uint8_t* byte)
 inline void Fifo_Put(app_fifo_t* fifo, uint8_t byte)
 {
 	app_fifo_put(fifo, byte);
+}
+
+/**
+ * \brief Checks whether fifo is empty
+ *
+ * \param fifo - fifo to check
+ *
+ * \return 		true - if fifo empty
+ * 				false - if fifo contains some data
+ */
+inline uint32_t Fifo_Is_Empty(app_fifo_t* fifo)
+{
+	if(fifo->read_pos == fifo->write_pos)
+		return true;
+
+	return false;
 }

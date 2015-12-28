@@ -295,10 +295,10 @@ uint32_t Int_Flash_Erase_Page(uint32_t* flash_page_beginning_address)
 	flash_write_or_erase_flag = FLASH_ERASE_OPERATION;
 	flash_operation_completed_flag = FALSE;
 	uint32_t temp;
-
+	uint32_t ret_val = 0;
 	do
 	{
-		sd_flash_page_erase((uint32_t)flash_page_beginning_address/1024);
+		ret_val = sd_flash_page_erase((uint32_t)flash_page_beginning_address/1024);
 
 		Flash_Wait_Till_Op_Done();
 

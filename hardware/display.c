@@ -14,6 +14,9 @@
 #include "nrf51.h"
 #include "stddef.h"
 #include "stdint.h"
+#include "RTC.h"
+
+
 /* Structure : first byte - command
  * 				line 1    -	line_number, data,
  * 				line 2	  -	line_number, data
@@ -43,10 +46,10 @@ static void Display_SPI_Config()
 	NRF_SPI1->CONFIG = 0;
 
 	///	Set the CPHA0 and CPOL0 and MSB bit first
-	NRF_SPI1->CONFIG = (SPI_CONFIG_CPHA_Leading << SPI_CONFIG_CPHA_Pos) | (SPI_CONFIG_CPOL_ActiveHigh << SPI_CONFIG_CPOL_Pos) | (SPI_CONFIG_ORDER_MsbFirst << SPI_CONFIG_ORDER_Pos);
+	NRF_SPI1->CONFIG = (SPI_CONFIG_CPHA_Leading << SPI_CONFIG_CPHA_Pos) | (SPI_CONFIG_CPOL_ActiveHigh << SPI_CONFIG_CPOL_Pos) | (SPI_CONFIG_ORDER_LsbFirst << SPI_CONFIG_ORDER_Pos);
 
-	///	Set the Display SPI CLK freqency to 1 MHz
-	NRF_SPI1->FREQUENCY = SPI_FREQUENCY_FREQUENCY_M1;
+	///	Set the Display SPI CLK freqency to 0.5 MHz
+	NRF_SPI1->FREQUENCY = SPI_FREQUENCY_FREQUENCY_K500;
 }
 
 
@@ -68,6 +71,8 @@ static void Sharp_VCOM_Config()
 	///	Set the value to RTC CC which triggers VCOM signal toggling (32Hz)
 	NRF_RTC1->CC[3] = NRF_RTC1->COUNTER + 1024;
 	///	Enable the RTC CC which triggers VCOM signal toggling
+	NRF_RTC1->EVTENSET = RTC_EVTENSET_COMPARE3_Msk;
+
 	NRF_RTC1->INTENSET = RTC_INTENSET_COMPARE3_Msk;
 }
 
@@ -101,8 +106,16 @@ void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 
 }
 
+void Display_Clear()
+{
+	uint8_t data[2] = {0};
+	data[0] = SHARP_CLEAR_SCREEN;
+	SPI_Transfer_Non_Blocking(NRF_SPI1, data, sizeof(data), NULL, 0, DISP_CS);
+}
+
 void Display_Test()
 {
+	Display_Clear();
 		uint8_t byte = 0x0F;
 		//Display_
 		for(uint8_t i=0; i<96; i++)

@@ -167,6 +167,8 @@ void 		Ble_Uart_Handler(ble_uart_t * p_uart, ble_uart_evt_t * p_evt, ble_uart_da
 uint32_t 	Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size, uint8_t data_buf_dynamically_allocated);
 
 uint32_t 	ble_uart_is_notification_enabled(ble_uart_t * p_uart, bool * p_indication_enabled);
+
+uint32_t 	Ble_Uart_Execute_Ble_Requests_If_Available();
 /** @} */
 
 

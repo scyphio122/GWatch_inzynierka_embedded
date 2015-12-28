@@ -18,5 +18,5 @@ void	 	Fifo_Init(app_fifo_t* fifo, uint8_t* buf, uint16_t buf_size);
 void 		Fifo_Clear(app_fifo_t* fifo);
 void 		Fifo_Get(app_fifo_t* fifo, uint8_t* byte);
 void 		Fifo_Put(app_fifo_t* fifo, uint8_t byte);
-
+uint32_t 	Fifo_Is_Empty(app_fifo_t* fifo);
 #endif /* LIBRARIES_FIFO_H_ */

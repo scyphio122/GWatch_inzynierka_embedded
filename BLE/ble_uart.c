@@ -40,10 +40,13 @@
 #include <sys/_stdint.h>
 #include "libraries/memory_organization.h"
 #include "GPS.h"
+#include "libraries/scheduler.h"
 
 /**@brief Buffer to hold data to send via TX. */
 static volatile bool		ble_tx_packet_in_progress = false;		/**< Mutex on single packet HVX transmission */
 volatile uint8_t 			ble_tx_in_progress;						/**< Mutex on entire message HVX transmission */
+static volatile uint8_t		ble_notification_packet_in_progress = false;
+volatile uint8_t			ble_notification_in_progress;
 static uint8_t				ble_uart_tx_buffer[20];					/**< Buffer for the single packet message which is sent from the device to the central */
 static uint8_t 				ble_uart_rx_buffer[20];					/**< Buffer for incomming from central data */
 static volatile uint16_t	ble_uart_tx_data_size;					/**< Size of data which are to be send */
@@ -256,6 +259,19 @@ static void Ble_Uart_Wait_Till_Packet_Transmission_In_Progress()
 	return;
 }
 
+/**
+ * \brief This function blocks program execution until the single BLE packet is transmitted
+ */
+static void Ble_Uart_Wait_Till_Notification_Packet_In_Progress()
+{
+	while(ble_notification_packet_in_progress)
+	{
+		__WFE();
+	}
+
+	return;
+}
+
 /***
  * \brief This function blocks program execution until entire message (even more than single packet) is transmitted
  */
@@ -300,14 +316,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_GET_GPS_POS_CMD:
 		{
-			///	Send the current position. Because of its size it must be sent in 3 packages
-			///	Send Latitude first
-			Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.latitude, sizeof(gga_message.latitude) + sizeof(gga_message.latitude_indi), false);
-			///	SenD Longtitude
-			Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.longtitude, sizeof(gga_message.longtitude) + sizeof(gga_message.latitude_indi), false);
-			///	Send Altitude
-			Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.altitude, sizeof(gga_message.altitude) + sizeof(gga_message.altitude_unit), false);
-
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_GET_GPS_VELOCITY:
@@ -320,37 +329,17 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_GET_AVAILABLE_TRACKS:
 		{
-			Mem_Org_List_Tracks_Through_BLE();
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_ENABLE_GPS_SAMPLES_STORAGE:
 		{
-			uint8_t err = 0;
-			if(!mem_org_track_samples_storage_enabled)
-			{
-				Mem_Org_Track_Start_Storage();
-				err = NRF_SUCCESS;
-			}
-			else
-			{
-				err = NRF_ERROR_INVALID_STATE;
-			}
-			Ble_Uart_Data_Send(BLE_ENABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_DISABLE_GPS_SAMPLES_STORAGE:
 		{
-			uint8_t err = 0;
-			if(mem_org_track_samples_storage_enabled)
-			{
-				Mem_Org_Track_Stop_Storage();
-				err = NRF_SUCCESS;
-			}
-			else
-			{
-				 err = NRF_ERROR_INVALID_STATE;
-			}
-			Ble_Uart_Data_Send(BLE_DISABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_GET_SATTELITES_USED:
@@ -360,10 +349,7 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_CLEAR_TRACK_MEMORY:
 		{
-			Mem_Org_Clear_Tracks_Memory();
-			Mem_Org_Init();
-			uint8_t ret_code = NRF_SUCCESS;
-			Ble_Uart_Data_Send(BLE_CLEAR_TRACK_MEMORY, &ret_code, sizeof(ret_code), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_GET_BAT_VOLT:
@@ -519,9 +505,9 @@ static uint32_t Ble_Uart_Notification_Single_Packet_Send(ble_uart_t* p_uart, uin
 	        hvx_params.p_len  = &hvx_len;
 	        hvx_params.p_data = ble_uart_tx_buffer;
 
-	        Ble_Uart_Wait_Till_Packet_Transmission_In_Progress();
+	        Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
 	    	///	Set the ble transmission flag high to indicate ongoing transmission
-	    	ble_tx_packet_in_progress = true;
+	    	ble_notification_packet_in_progress = true;
 	    	///	Send the data
 	        err_code = sd_ble_gatts_hvx(p_uart->conn_handle, &hvx_params);
 
@@ -547,10 +533,13 @@ static uint32_t Ble_Uart_Notify_Send_Next_Packet(ble_uart_t* p_uart)
 
 uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size, uint8_t data_buf_dynamically_allocated)
 {
-	if(m_conn_handle != BLE_CONN_HANDLE_INVALID)
+	bool notification_enabled = false;
+	ble_uart_is_notification_enabled(&m_ble_uart, &notification_enabled);
+
+	if(m_conn_handle != BLE_CONN_HANDLE_INVALID && notification_enabled)
 	{
 		///	Set the flag to indicate that message is going to be sent
-		ble_tx_in_progress = 1;
+		ble_notification_in_progress = 1;
 		///	Set the size of data which are to be sent
 		ble_uart_tx_data_size = actual_data_size;
 		///	Set the pointer to the data
@@ -601,7 +590,7 @@ void Ble_Uart_Handler(ble_uart_t * p_uart, ble_uart_evt_t * p_evt, ble_uart_data
         case BLE_UART_EVT_NOTIFICATION_TRANSMITTED:
         {
       	   ///	Clear the flag to indicate that transmission has ended
-      	   ble_tx_packet_in_progress = false;
+      	   ble_notification_packet_in_progress = false;
          	///	If there is more data to be send, send next packet
             if(ble_uart_tx_data_size > 0)
          	   Ble_Uart_Notify_Send_Next_Packet(p_uart);
@@ -612,7 +601,7 @@ void Ble_Uart_Handler(ble_uart_t * p_uart, ble_uart_evt_t * p_evt, ble_uart_data
  				   ///	Free the data resources
  				   free(ble_data_ptr);
          	   }
-         	   ble_tx_in_progress = false;
+         	   ble_notification_in_progress = false;
             }
         	break;
         }
@@ -932,4 +921,77 @@ uint32_t ble_uart_is_notification_enabled(ble_uart_t * p_uart, bool * p_indicati
         *p_indication_enabled = ble_srv_is_notification_enabled(cccd_value_buf);
     }
     return err_code;
+}
+
+
+uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
+{
+	uint8_t 	request_code = 0;
+	uint32_t 	ret_val = 0;
+	while(!Scheduler_Empty(&ble_task_fifo))
+	{
+		ret_val = Scheduler_Get_Task(&ble_task_fifo, &request_code);
+		switch(request_code)
+		{
+			case BLE_ENABLE_GPS_SAMPLES_STORAGE:
+			{
+				uint8_t err = 0;
+				if(!mem_org_track_samples_storage_enabled)
+				{
+					Mem_Org_Track_Start_Storage();
+					err = NRF_SUCCESS;
+				}
+				else
+				{
+					err = NRF_ERROR_INVALID_STATE;
+				}
+				Ble_Uart_Data_Send(BLE_ENABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err), false);
+				break;
+			}
+			case BLE_DISABLE_GPS_SAMPLES_STORAGE:
+			{
+				uint8_t err = 0;
+				if(mem_org_track_samples_storage_enabled)
+				{
+					Mem_Org_Track_Stop_Storage();
+					err = NRF_SUCCESS;
+				}
+				else
+				{
+					 err = NRF_ERROR_INVALID_STATE;
+				}
+				Ble_Uart_Data_Send(BLE_DISABLE_GPS_SAMPLES_STORAGE, &err, sizeof(err), false);
+				break;
+			}
+			case BLE_CLEAR_TRACK_MEMORY:
+			{
+				Mem_Org_Clear_Tracks_Memory();
+				Mem_Org_Init();
+				uint8_t ret_code = NRF_SUCCESS;
+				Ble_Uart_Data_Send(BLE_CLEAR_TRACK_MEMORY, &ret_code, sizeof(ret_code), false);
+
+				//RTC_Wait(RTC_S_TO_TICKS(2));
+
+				break;
+			}
+			case BLE_GET_GPS_POS_CMD:
+			{
+				///	Send the current position. Because of its size it must be sent in 3 packages
+				///	Send Latitude first
+				Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.latitude, sizeof(gga_message.latitude) + sizeof(gga_message.latitude_indi), false);
+				///	SenD Longtitude
+				Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.longtitude, sizeof(gga_message.longtitude) + sizeof(gga_message.latitude_indi), false);
+				///	Send Altitude
+				Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.altitude, sizeof(gga_message.altitude) + sizeof(gga_message.altitude_unit), false);
+
+				break;
+			}
+			case BLE_GET_AVAILABLE_TRACKS:
+			{
+				Mem_Org_List_Tracks_Through_BLE();
+				break;
+			}
+		}
+	}
+	return NRF_SUCCESS;
 }

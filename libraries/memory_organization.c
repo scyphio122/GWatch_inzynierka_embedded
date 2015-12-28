@@ -6,15 +6,15 @@
  */
 
 
-#include "memory_organization.h"
-#include "int_flash.h"
-#include "ext_flash.h"
-#include "stdint-gcc.h"
-#include "nrf_error.h"
-#include "stdlib.h"
-#include "RTC.h"
-#include "gps.h"
-#include "ble_uart.h"
+#include <ble_uart.h>
+#include <GPS.h>
+#include <libraries/memory_organization.h>
+#include <nrf_error.h>
+#include <nrf_soc.h>
+#include <nrf51.h>
+#include <RTC.h>
+#include <stdbool.h>
+#include <string.h>
 
 static uint32_t 		mem_org_next_free_key_address = MEM_ORG_KEY_AREA_START_ADDRESS;
 static uint32_t 	    mem_org_next_free_data_sample_address = MEM_ORG_DATA_AREA_START_ADDRESS;
@@ -349,6 +349,7 @@ uint32_t Mem_Org_Track_Stop_Storage()
  */
 uint32_t Mem_Org_Clear_Tracks_Memory()
 {
+	sd_nvic_DisableIRQ(UART0_IRQn);
 	for(uint32_t i=MEM_ORG_KEY_AREA_START_ADDRESS; i<MEM_ORG_KEY_AREA_END_ADDRESS; i += INTERNAL_FLASH_PAGE_SIZE)
 	{
 		Int_Flash_Erase_Page(i);
@@ -358,6 +359,7 @@ uint32_t Mem_Org_Clear_Tracks_Memory()
 	{
 		Int_Flash_Erase_Page(i);
 	}
+	sd_nvic_EnableIRQ(UART0_IRQn);
 	return NRF_SUCCESS;
 }
 

@@ -17,7 +17,7 @@
 #include "ext_flash.h"
 #include "ble_uart.h"
 #include "libraries/memory_organization.h"
-
+#include "libraries/scheduler.h"
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -52,11 +52,14 @@ int main()
 	NVIC_Config();
 	RTC_Start();
 	Ext_Flash_Init();
-
+	Scheduler_Init();
 	Mem_Org_Init();
 
-
-
+	//Display_Test();
+/*
+	while(1)
+		__WFE();
+*/
 	/*Mem_Org_Track_Start_Storage();
 	Mem_Org_Store_Sample(0x01234567);
 	Mem_Org_Store_Sample(0x89ABCDEF);
@@ -112,6 +115,8 @@ int main()
 			}
 			gps_sample_storage_time = 0;
 		}
+		Ble_Uart_Execute_Ble_Requests_If_Available();
+
 		__WFE();
 	}
 
