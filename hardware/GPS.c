@@ -211,7 +211,7 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 
 				///	If the current fix state is different than the previous one, then notify the central aobut the fix change
 				if(msg->fix_indi != previous_fix)
-					Ble_Uart_Notify_Central(0, &msg->fix_indi, sizeof(msg->fix_indi));
+					Ble_Uart_Notify_Central(0, &msg->fix_indi, sizeof(msg->fix_indi), false);
 				break;
 			}
 			case 6: /// Satellites used

@@ -108,6 +108,7 @@ int main()
 			if((gps_sample_nr % mem_org_gps_sample_storage_interval == 0) && (mem_org_track_samples_storage_enabled == 1))
 			{
 				Mem_Org_Store_Sample(gps_sample_timestmap);
+				Ble_Uart_Data_Send(0xFF, NULL, 0, false);
 			}
 			gps_sample_storage_time = 0;
 		}

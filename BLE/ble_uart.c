@@ -287,6 +287,11 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			RTC_Set_Timestamp(*timestamp_to_set);
 			break;
 		}
+		case BLE_INDICATE_GPS_FIX:
+		{
+			Ble_Uart_Data_Send(BLE_INDICATE_GPS_FIX, &gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
+			break;
+		}
 		case BLE_TIMESTAMP_GET_CMD:
 		{
 			uint32_t timestamp = RTC_Get_Timestamp();
@@ -444,22 +449,24 @@ static uint32_t Ble_Uart_Send_Single_Packet(ble_uart_t* p_uart, uint8_t* data, u
  */
 uint32_t Ble_Uart_Data_Send(uint8_t command_code, uint8_t* data, uint16_t data_size, uint8_t data_buf_dynamically_allocated)
 {
-	///	Set the flag to indicate that message is going to be sent
-	ble_tx_in_progress = 1;
-	///	Set the size of data which are to be sent
-	ble_uart_tx_data_size = data_size;
-	///	Set the pointer to the data
-	ble_data_ptr = data;
-	///	Set the command code in the buffer
-	ble_uart_tx_buffer[0] = command_code;
-	///	Set the buffer allocation flasg
-	ble_uart_data_dynamically_allocated = data_buf_dynamically_allocated;
-	///	If there is more than one message to send
-	if(data_size > 19)
-		Ble_Uart_Send_Single_Packet(&m_ble_uart, data, 19);	///	Send the first packet (19 bytes, because the first one is command code)
-	else
-		Ble_Uart_Send_Single_Packet(&m_ble_uart, data, data_size);	///	If there is only 1 message to send
-
+	if(m_conn_handle != BLE_CONN_HANDLE_INVALID)
+	{
+		///	Set the flag to indicate that message is going to be sent
+		ble_tx_in_progress = 1;
+		///	Set the size of data which are to be sent
+		ble_uart_tx_data_size = data_size;
+		///	Set the pointer to the data
+		ble_data_ptr = data;
+		///	Set the command code in the buffer
+		ble_uart_tx_buffer[0] = command_code;
+		///	Set the buffer allocation flasg
+		ble_uart_data_dynamically_allocated = data_buf_dynamically_allocated;
+		///	If there is more than one message to send
+		if(data_size > 19)
+			Ble_Uart_Send_Single_Packet(&m_ble_uart, data, 19);	///	Send the first packet (19 bytes, because the first one is command code)
+		else
+			Ble_Uart_Send_Single_Packet(&m_ble_uart, data, data_size);	///	If there is only 1 message to send
+	}
 	return NRF_SUCCESS;
 }
 
@@ -540,22 +547,24 @@ static uint32_t Ble_Uart_Notify_Send_Next_Packet(ble_uart_t* p_uart)
 
 uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size, uint8_t data_buf_dynamically_allocated)
 {
-	///	Set the flag to indicate that message is going to be sent
-	ble_tx_in_progress = 1;
-	///	Set the size of data which are to be sent
-	ble_uart_tx_data_size = actual_data_size;
-	///	Set the pointer to the data
-	ble_data_ptr = data;
-	///	Set the command code in the buffer
-	ble_uart_tx_buffer[0] = command_code;
-	///	Set the buffer allocation flasg
-	ble_uart_data_dynamically_allocated = data_buf_dynamically_allocated;
-	///	If there is more than one message to send
-	if(actual_data_size > 19)
-		Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, 19);	///	Send the first packet (19 bytes, because the first one is command code)
-	else
-		Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, actual_data_size);	///	If there is only 1 message to send
-
+	if(m_conn_handle != BLE_CONN_HANDLE_INVALID)
+	{
+		///	Set the flag to indicate that message is going to be sent
+		ble_tx_in_progress = 1;
+		///	Set the size of data which are to be sent
+		ble_uart_tx_data_size = actual_data_size;
+		///	Set the pointer to the data
+		ble_data_ptr = data;
+		///	Set the command code in the buffer
+		ble_uart_tx_buffer[0] = command_code;
+		///	Set the buffer allocation flasg
+		ble_uart_data_dynamically_allocated = data_buf_dynamically_allocated;
+		///	If there is more than one message to send
+		if(actual_data_size > 19)
+			Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, 19);	///	Send the first packet (19 bytes, because the first one is command code)
+		else
+			Ble_Uart_Notification_Single_Packet_Send(&m_ble_uart, data, actual_data_size);	///	If there is only 1 message to send
+	}
 	return NRF_SUCCESS;
 }
 
