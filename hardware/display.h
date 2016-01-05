@@ -11,10 +11,10 @@
 #include "stdint.h"
 
 #define SHARP_WRITE_LINE_CMD				(uint8_t)0x01//0xC0
-#define SHARP_WRITA_MULTIPLE_LINES_CMD
+#define SHARP_WRITA_MULTIPLE_LINES_CMD		(uint8_t)0x01
 #define SHARP_CLEAR_SCREEN					(uint8_t)0x04
 
-extern uint8_t display_array[13*96];
+extern uint8_t display_array[14*96];
 
 
 void Display_Config();

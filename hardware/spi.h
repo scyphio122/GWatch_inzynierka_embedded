@@ -4,6 +4,8 @@
 #include "nrf51_bitfields.h"
 #include "hardware_settings.h"
 
+#define SPI_CS_MANUALLY_CHANGED						(uint8_t)0xFF
+
 extern uint8_t  spi_transfer_ongoing_flag;			/*< SPI transfer in progress flag */
 
 extern uint8_t* spi_0_rx_buff;						/*< Rx buffer pointer */

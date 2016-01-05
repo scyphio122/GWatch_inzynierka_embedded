@@ -541,6 +541,6 @@ const unsigned char font8x8[] =
 		    /* 01100000 */  0x60,
 		    /* 11000000 */  0xc0,
 		    /* 11111100 */  0xfc,
-		    /* 00000000 */   0,
+		    /* 00000000 */   0
 };
 #endif /* LIBRARIES_SHARP_DISPLAY_FONT_H_ */

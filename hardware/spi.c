@@ -176,7 +176,7 @@ void SPI1_TWI1_IRQHandler()
 		///	Deassert the cs pin
 		//SPI_Assert_CS(spi_1_cs_pin);
 		//RTC_Wait(RTC_US_TO_TICKS(62));
-		NRF_GPIO->OUTCLR = 1 << spi_1_cs_pin;
+
 
 		if(spi_1_dynamically_allocated_buf == true)
 		{
@@ -185,6 +185,9 @@ void SPI1_TWI1_IRQHandler()
 		}
 
 		spi_1_transfer_ongoing_flag = 0;
+
+		if(spi_1_cs_pin != SPI_CS_MANUALLY_CHANGED)
+			NRF_GPIO->OUTCLR = 1 << spi_1_cs_pin;
 		/*while(!NRF_SPI1->EVENTS_READY){}
 		///	Disable the peripheral
 		NRF_SPI1->ENABLE = 0;
@@ -304,9 +307,10 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 		spi_0_tx_index = 0;
 		spi_0_rx_index = 0;
 		spi_0_cs_pin = cs_pin;
-		if(dynamically_allcated_buf)
-			spi_1_dynamically_allocated_buf = dynamically_allcated_buf;
 		spi_0_transfer_ongoing_flag = 1;
+		if(dynamically_allcated_buf)
+			spi_0_dynamically_allocated_buf = dynamically_allcated_buf;
+
 	}
 #ifdef SPI1_USED
 	if(SPI == NRF_SPI1)
@@ -318,16 +322,16 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 		spi_1_tx_index = 0;
 		spi_1_rx_index = 0;
 		spi_1_cs_pin = cs_pin;
+		spi_1_transfer_ongoing_flag = 1;
 		if(dynamically_allcated_buf)
 			spi_1_dynamically_allocated_buf = dynamically_allcated_buf;
-		spi_1_transfer_ongoing_flag = 1;
+
 	}
 #endif
 
 
-
-	//SPI_Deassert_CS(cs_pin);
-	NRF_GPIO->OUTSET = 1 << cs_pin;
+	if(cs_pin != SPI_CS_MANUALLY_CHANGED)
+		NRF_GPIO->OUTSET = 1 << cs_pin;
 	//Timer_Delay(TIMER_US_TO_TICKS(31));
 	//RTC_Wait(RTC_US_TO_TICKS(62));
 	///	Enable the SPI peripheral

@@ -16,6 +16,7 @@
 #include "stdint.h"
 #include "RTC.h"
 #include "sharp_display_font.h"
+#include "stdlib.h"
 
 /* Structure : first byte - command
  * 				line 1    -	line_number, data,
@@ -24,7 +25,7 @@
  * 					.
  * 					.
  */
-uint8_t display_array[96*13] = {0};
+uint8_t display_array[96*14] = {0};
 
 
 /**
@@ -94,7 +95,7 @@ void Display_Write_Line(uint8_t line_number)
 	///	Copy the write command
 	line_buffer[0] = SHARP_WRITE_LINE_CMD;
 	///	Copy the line number and pixel data
-	memcpy(&line_buffer[1], &display_array[line_number*13], 13);
+	memcpy(&line_buffer[1], &display_array[line_number*14], 13);
 	line_buffer[14] = 0;
 	line_buffer[15] = 0;
 	SPI_Transfer_Non_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS, true);
@@ -105,14 +106,19 @@ void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 {
 	uint8_t cmd = SHARP_WRITA_MULTIPLE_LINES_CMD;
 
-	SPI_Transfer_Non_Blocking(NRF_SPI1, &cmd, sizeof(cmd), NULL, 0, DISP_CS, false);
+	NRF_GPIO->OUTSET = 1 << DISP_CS;
+	SPI_Transfer_Non_Blocking(NRF_SPI1, &cmd, sizeof(cmd), NULL, 0, SPI_CS_MANUALLY_CHANGED, false);
+
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
+
+	SPI_Transfer_Non_Blocking(NRF_SPI1, &display_array[start_line*14], (end_line - start_line)*14, NULL, 0, DISP_CS, false);
 
 }
 
 void Display_Clear()
 {
 	uint8_t* ptr;
-	ptr= malloc(2);
+	ptr = malloc(2);
 	ptr[0] = SHARP_CLEAR_SCREEN;
 	ptr[1] = 0;
 	SPI_Transfer_Non_Blocking(NRF_SPI1, ptr, 2, NULL, 0, DISP_CS, true);
@@ -123,12 +129,12 @@ void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number)
 	for(uint8_t i=0; i< text_size; i++)
 	{
 		for(uint8_t char_line = 0; char_line < 8; char_line++)
-			display_array[(char_line + line_number)*13 + i + 1] = font8x8[text[i] - 32 + char_line];
+			display_array[(char_line + line_number)*14 + i + 1] = font8x8[text[i] - 32 + char_line];
 	}
 
 	for(uint8_t i=0; i < 8; i++)
 	{
-		Display()
+		//Display()
 	}
 
 }
@@ -142,16 +148,19 @@ void Display_Test()
 		//Display_
 		for(uint8_t i=0; i<96; i++)
 		{
-			display_array[i*13] = i+1;
+			display_array[i*14] = i+1;
 			for(uint8_t j = 1; j<13; j++)
-				display_array[ i*13+ j] = byte;
+				display_array[ i*14+ j] = byte;
+			display_array[i*14 + 13] = 0;
 		}
 
-
-			for(uint8_t i=0; i<96;i++)
+		Display_Write_Consecutive_Lines(0, 95);
+		SPI_Wait_For_Transmission_End(NRF_SPI1);
+		RTC_Wait(1);
+		/*	for(uint8_t i=0; i<96;i++)
 			{
 				Display_Write_Line(i);
 				RTC_Wait(RTC_MS_TO_TICKS(1));
-			}
+			}*/
 
 }
