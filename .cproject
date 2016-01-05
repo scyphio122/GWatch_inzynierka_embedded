@@ -54,7 +54,6 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.813670878" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/CMSIS&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/libs&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/hardware&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/libraries&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/ble&quot;"/>
@@ -73,6 +72,7 @@
 									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries/3.0.1/crc16&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/ble&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/DEVICE&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/libraries&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.2088571320" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="NRF51"/>

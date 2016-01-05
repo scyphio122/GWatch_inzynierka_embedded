@@ -24,6 +24,8 @@
 #include <sys/_stdint.h>
 #include "ble_advdata.h"
 #include "ble_uart.h"
+#include "int_flash.h"
+
 
 uint16_t 							m_conn_handle = BLE_CONN_HANDLE_INVALID;		/*< This variable holds an information whether the device is in BLE connection or not **/
 static ble_gap_adv_params_t			m_adv_params;
@@ -313,6 +315,8 @@ void BLE_Init()
 	gap_params_init();
 	services_init();
 	sec_params_init();
+
+	sd_ble_gap_tx_power_set(-16);
 }
 
 

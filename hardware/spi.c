@@ -4,17 +4,21 @@
 #include "app_error.h"
 #include "nrf_gpio.h"
 #include "nrf_soc.h"
+#include "RTC.h"
 //#include "hardware_settings.h"
 
 #define SPI1_USED
-uint8_t  spi_transfer_ongoing_flag;			/*< SPI transfer in progress flag */
 
+volatile uint8_t  spi_0_transfer_ongoing_flag;			/*< SPI 1 transfer in progress flag */
+
+uint8_t  spi_0_cs_pin;
 uint8_t* spi_0_rx_buff;						/*< Rx buffer pointer */
 uint8_t* spi_0_tx_buff;						/*< Tx buffer pointer */
 uint16_t spi_0_rx_index;					/*< Rx buffer index */
 uint16_t spi_0_tx_index;					/*< Tx buffer index */
 uint16_t spi_0_tx_buff_size;				/*< Tx buffer size */
 uint16_t spi_0_rx_buff_size;				/*< Rx buffer size */
+uint8_t	 spi_0_dynamically_allocated_buf = false;
 
 
 #ifdef SPI1_USED
@@ -25,6 +29,8 @@ uint16_t spi_1_rx_index;					/*< Rx buffer index */
 uint16_t spi_1_tx_index;					/*< Tx buffer index */
 uint16_t spi_1_tx_buff_size;				/*< Tx buffer size */
 uint16_t spi_1_rx_buff_size;				/*< Rx buffer size */
+uint8_t	 spi_1_dynamically_allocated_buf = false;
+volatile uint8_t  spi_1_transfer_ongoing_flag;			/*< SPI 1 transfer in progress flag */
 #endif
 
 __attribute__((optimize("O0")))
@@ -160,7 +166,6 @@ void SPI1_TWI1_IRQHandler()
 
 	///	Clear the interrupt flag
 	//NRF_SPI1->EVENTS_READY = 0;
-
 	///	If we reached end of receive or transmission
 	if((spi_1_tx_index >= spi_1_tx_buff_size))
 	{
@@ -169,10 +174,17 @@ void SPI1_TWI1_IRQHandler()
 		NRF_SPI1->INTENCLR = SPI_INTENCLR_READY_Msk;
 
 		///	Deassert the cs pin
-		SPI_Deassert_CS(spi_1_cs_pin);
+		//SPI_Assert_CS(spi_1_cs_pin);
+		//RTC_Wait(RTC_US_TO_TICKS(62));
+		NRF_GPIO->OUTCLR = 1 << spi_1_cs_pin;
 
+		if(spi_1_dynamically_allocated_buf == true)
+		{
+			free(spi_1_tx_buff);
+			spi_1_dynamically_allocated_buf = false;
+		}
 
-
+		spi_1_transfer_ongoing_flag = 0;
 		/*while(!NRF_SPI1->EVENTS_READY){}
 		///	Disable the peripheral
 		NRF_SPI1->ENABLE = 0;
@@ -183,6 +195,7 @@ void SPI1_TWI1_IRQHandler()
 	if(spi_1_tx_buff_size != 0)
 	{
 		NRF_SPI1->TXD = spi_1_tx_buff[spi_1_tx_index++];
+		uint8_t dummy_byte = NRF_SPI1->RXD;
 	}
 
 	///	If we want to receive...
@@ -191,6 +204,8 @@ void SPI1_TWI1_IRQHandler()
 		NRF_SPI1->TXD = 0;
 		spi_1_rx_buff[spi_1_rx_index++] = NRF_SPI1->RXD;
 	}
+
+
 
 
 
@@ -278,7 +293,7 @@ uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI, unsigned char* data_to_send, u
 	return NRF_SUCCESS;
 }
 
-uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uint16_t data_size, uint8_t* rx_buffer, uint16_t rx_size, uint8_t cs_pin)
+uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uint16_t data_size, uint8_t* rx_buffer, uint16_t rx_size, uint8_t cs_pin, uint8_t dynamically_allcated_buf)
 {
 	if(SPI == NRF_SPI0)
 	{
@@ -288,6 +303,10 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 		spi_0_rx_buff_size = rx_size;
 		spi_0_tx_index = 0;
 		spi_0_rx_index = 0;
+		spi_0_cs_pin = cs_pin;
+		if(dynamically_allcated_buf)
+			spi_1_dynamically_allocated_buf = dynamically_allcated_buf;
+		spi_0_transfer_ongoing_flag = 1;
 	}
 #ifdef SPI1_USED
 	if(SPI == NRF_SPI1)
@@ -298,10 +317,19 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 		spi_1_rx_buff_size = rx_size;
 		spi_1_tx_index = 0;
 		spi_1_rx_index = 0;
+		spi_1_cs_pin = cs_pin;
+		if(dynamically_allcated_buf)
+			spi_1_dynamically_allocated_buf = dynamically_allcated_buf;
+		spi_1_transfer_ongoing_flag = 1;
 	}
 #endif
 
-	SPI_Assert_CS(cs_pin);
+
+
+	//SPI_Deassert_CS(cs_pin);
+	NRF_GPIO->OUTSET = 1 << cs_pin;
+	//Timer_Delay(TIMER_US_TO_TICKS(31));
+	//RTC_Wait(RTC_US_TO_TICKS(62));
 	///	Enable the SPI peripheral
 	SPI->ENABLE = 1;
 
@@ -309,6 +337,21 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 
 	//SPI->TXD = *data_to_send;
 	sd_nvic_SetPendingIRQ(SPI1_TWI1_IRQn);
+
+	return NRF_SUCCESS;
 }
 
+void SPI_Wait_For_Transmission_End(NRF_SPI_Type* SPI)
+{
+	volatile uint8_t* flag = NULL;
+	if(SPI == NRF_SPI0)
+		flag = &spi_0_transfer_ongoing_flag;
+	else
+		flag = &spi_1_transfer_ongoing_flag;
+
+	while(!flag)
+	{
+		__WFE();
+	}
+}
 

@@ -15,7 +15,7 @@
 #include "stddef.h"
 #include "stdint.h"
 #include "RTC.h"
-
+#include "sharp_display_font.h"
 
 /* Structure : first byte - command
  * 				line 1    -	line_number, data,
@@ -24,7 +24,7 @@
  * 					.
  * 					.
  */
-uint8_t display_array[13*96] = {0};
+uint8_t display_array[96*13] = {0};
 
 
 /**
@@ -49,7 +49,7 @@ static void Display_SPI_Config()
 	NRF_SPI1->CONFIG = (SPI_CONFIG_CPHA_Leading << SPI_CONFIG_CPHA_Pos) | (SPI_CONFIG_CPOL_ActiveHigh << SPI_CONFIG_CPOL_Pos) | (SPI_CONFIG_ORDER_LsbFirst << SPI_CONFIG_ORDER_Pos);
 
 	///	Set the Display SPI CLK freqency to 0.5 MHz
-	NRF_SPI1->FREQUENCY = SPI_FREQUENCY_FREQUENCY_K500;
+	NRF_SPI1->FREQUENCY = SPI_FREQUENCY_FREQUENCY_M1;
 }
 
 
@@ -66,9 +66,9 @@ static void Sharp_VCOM_Config()
 	///	Configure the PPI channel
 	uint32_t err_code = sd_ppi_channel_assign(0, &NRF_RTC1->EVENTS_COMPARE[3], &NRF_GPIOTE->TASKS_OUT[0]);
 	///	Enable the PPI channel
-	err_code = sd_ppi_channel_enable_set(0);
+	err_code = sd_ppi_channel_enable_set(1);
 
-	///	Set the value to RTC CC which triggers VCOM signal toggling (32Hz)
+	///	Set the value to RTC CC which triggers VCOM signal toggling (16Hz)
 	NRF_RTC1->CC[3] = NRF_RTC1->COUNTER + 1024;
 	///	Enable the RTC CC which triggers VCOM signal toggling
 	NRF_RTC1->EVTENSET = RTC_EVTENSET_COMPARE3_Msk;
@@ -88,8 +88,8 @@ void Display_Config()
 void Display_Write_Line(uint8_t line_number)
 {
 	static uint8_t* line_buffer = NULL;
-	if(line_buffer == NULL)
-		line_buffer = malloc(16);
+
+	line_buffer = malloc(16);
 
 	///	Copy the write command
 	line_buffer[0] = SHARP_WRITE_LINE_CMD;
@@ -97,21 +97,43 @@ void Display_Write_Line(uint8_t line_number)
 	memcpy(&line_buffer[1], &display_array[line_number*13], 13);
 	line_buffer[14] = 0;
 	line_buffer[15] = 0;
-	SPI_Transfer_Non_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS);
+	SPI_Transfer_Non_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS, true);
 	//SPI_Transfer_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS);
 }
 
 void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 {
+	uint8_t cmd = SHARP_WRITA_MULTIPLE_LINES_CMD;
+
+	SPI_Transfer_Non_Blocking(NRF_SPI1, &cmd, sizeof(cmd), NULL, 0, DISP_CS, false);
 
 }
 
 void Display_Clear()
 {
-	uint8_t data[2] = {0};
-	data[0] = SHARP_CLEAR_SCREEN;
-	SPI_Transfer_Non_Blocking(NRF_SPI1, data, sizeof(data), NULL, 0, DISP_CS);
+	uint8_t* ptr;
+	ptr= malloc(2);
+	ptr[0] = SHARP_CLEAR_SCREEN;
+	ptr[1] = 0;
+	SPI_Transfer_Non_Blocking(NRF_SPI1, ptr, 2, NULL, 0, DISP_CS, true);
 }
+
+void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number)
+{
+	for(uint8_t i=0; i< text_size; i++)
+	{
+		for(uint8_t char_line = 0; char_line < 8; char_line++)
+			display_array[(char_line + line_number)*13 + i + 1] = font8x8[text[i] - 32 + char_line];
+	}
+
+	for(uint8_t i=0; i < 8; i++)
+	{
+		Display()
+	}
+
+}
+
+
 
 void Display_Test()
 {
@@ -129,8 +151,7 @@ void Display_Test()
 			for(uint8_t i=0; i<96;i++)
 			{
 				Display_Write_Line(i);
-				RTC_Wait(RTC_MS_TO_TICKS(5));
-				RTC_Wait(2);
+				RTC_Wait(RTC_MS_TO_TICKS(1));
 			}
 
 }

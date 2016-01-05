@@ -6,7 +6,7 @@
 
 
 #define TIMER1_FREQ 				(uint16_t)31250	//Hz - this macro is created only to provide information about timer frequency
-#define TIMER1_PRESCALER			(uint8_t)9		//	16000000/(2^8) = 62500Hz
+#define TIMER1_PRESCALER			(uint8_t)8		//	16000000/(2^8) = 62500Hz
 
 #define TIMER2_FREQ					(uint16_t)62500
 #define TIMER2_PRESCALER			(uint8_t)8

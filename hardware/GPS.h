@@ -98,9 +98,10 @@ extern volatile uint8_t 		gps_msg_received;
 extern uint8_t					gps_msg_size;
 uint16_t						gps_msg_checksum;
 extern gps_gga_msg_t 			gga_message;
-extern volatile uint8_t			gps_sample_storage_time;
 extern uint32_t					gps_sample_nr;
 extern uint32_t					gps_sample_timestmap;
+extern volatile uint8_t			gps_message_sample_storage_time;
+
 
 void 		GPS_Init();
 void 		GPS_Turn_On();
@@ -108,6 +109,6 @@ void 		GPS_Turn_Off();
 void 		GPS_Reset();
 void 		GPS_Parse_Message();
 uint32_t 	GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy);
-
+uint32_t 	GPS_Prepare_To_Sampling_Start();
 
 #endif /* HARDWARE_GPS_H_ */

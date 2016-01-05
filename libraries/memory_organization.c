@@ -359,6 +359,7 @@ uint32_t Mem_Org_Clear_Tracks_Memory()
 	{
 		Int_Flash_Erase_Page(i);
 	}
+	mem_org_tracks_stored = 0;
 	sd_nvic_EnableIRQ(UART0_IRQn);
 	return NRF_SUCCESS;
 }

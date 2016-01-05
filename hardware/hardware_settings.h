@@ -26,7 +26,7 @@
 #define DISP_SCK			(uint8_t)24
 #define DISP_MOSI			(uint8_t)23
 #define DISP_CS				(uint8_t)22
-#define DISP_TOGGLE_PIN		BUTTON_PIN//(uint8_t)21
+#define DISP_TOGGLE_PIN		(uint8_t)21
 #define DISP_LIGHT			(uint8_t)28
 
 /** GPS MODULE **/

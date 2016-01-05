@@ -49,5 +49,8 @@ void SPI_Assert_CS(uint8_t cs_pin);
 void SPI_Deassert_CS(uint8_t cs_pin);
 
 uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI,unsigned char* data_to_send, uint16_t data_size, unsigned char* rx_buffer, uint16_t rx_size, uint8_t cs_pin);
+uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uint16_t data_size, uint8_t* rx_buffer, uint16_t rx_size, uint8_t cs_pin, uint8_t dynamically_allcated_buf);
 void  spi_send_message();
+
+void SPI_Wait_For_Transmission_End(NRF_SPI_Type* SPI);
 #endif /* SPI_H_INCLUDED */

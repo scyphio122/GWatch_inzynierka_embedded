@@ -18,10 +18,10 @@ uint8_t						gps_msg_size;
 volatile uint8_t 			gps_msg_received;
 uint16_t					gps_msg_checksum;
 gps_gga_msg_t				gga_message;
-volatile uint8_t			gps_sample_storage_time;
 uint32_t					gps_sample_nr;
 uint32_t					gps_sample_timestmap;
-
+volatile uint8_t			gps_message_sample_storage_time;
+uint32_t					gps_distance_meters;
 /**
  * This function initializes the GPS pins
  */
@@ -271,6 +271,8 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 
 		gps_sample_timestmap = RTC_Get_Timestamp();
 		gps_sample_nr++;
+
+		gps_message_sample_storage_time = 1;
 		return NRF_SUCCESS;
 
 //	}
@@ -398,7 +400,15 @@ uint32_t GPS_Change_Message_Frequency(gps_msg_rate_indexes_e msg_to_change, uint
 	UART_Start_Tx();
 	UART_Send_String(msg, sizeof(msg));
 	UART_Stop_Tx();
+
+	return NRF_SUCCESS;
 }
 
+uint32_t GPS_Prepare_To_Sampling_Start()
+{
+	gps_sample_nr = 0;
+	gps_distance_meters = 0;
 
+	return NRF_SUCCESS;
+}
 

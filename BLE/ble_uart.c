@@ -367,6 +367,8 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			//RTC_Wait(1);
 		}
 	}
+
+	return NRF_SUCCESS;
 }
 
 
@@ -938,6 +940,7 @@ uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 				uint8_t err = 0;
 				if(!mem_org_track_samples_storage_enabled)
 				{
+					GPS_Prepare_To_Sampling_Start();
 					Mem_Org_Track_Start_Storage();
 					err = NRF_SUCCESS;
 				}

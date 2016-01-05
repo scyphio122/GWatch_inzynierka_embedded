@@ -8,6 +8,26 @@
 volatile char timer_delay_completed = 0;
 volatile char timer_overflow = 0;
 volatile char timer_timeout_flag = 0;
+
+
+void TIMER1_IRQHandler()
+{
+
+	if(NRF_TIMER1->EVENTS_COMPARE[0])
+	{
+		timer_delay_completed = true;
+		NRF_TIMER1->EVENTS_COMPARE[0] = 0;
+	}
+
+	if(NRF_TIMER1->EVENTS_COMPARE[1])
+	{
+		timer_timeout_flag = 1;
+		Timer_Cancel_Timeout();
+		NRF_TIMER1->EVENTS_COMPARE[1] = 0;
+	}
+
+
+}
 /**
 *	@brief This function initializes the TIMER1, which will be used for short delays
 **/

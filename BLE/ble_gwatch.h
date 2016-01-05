@@ -10,7 +10,7 @@
 
 #include "app_util.h"
 
-#define ADVERTISING_INTERVAL			80											/**< Advertising interval in units of 0.625 ms */
+#define ADVERTISING_INTERVAL			1600										/**< Advertising interval in units of 0.625 ms */
 #define ADVERTISING_TIMEOUT				0											/**< Advertising timeout. Zero for infinite */
 
 

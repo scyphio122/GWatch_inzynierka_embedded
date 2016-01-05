@@ -27,4 +27,12 @@ void Display_Clear();
 
 void Display_Test();
 
+void Display_Send_Text(uint8_t* text, uint8_t text_size);
+
+
+
+
+
+
+
 #endif /* HARDWARE_DISPLAY_H_ */

@@ -18,6 +18,8 @@
 #include "ble_uart.h"
 #include "libraries/memory_organization.h"
 #include "libraries/scheduler.h"
+#include "timer.h"
+
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -30,8 +32,11 @@ void NVIC_Config()
 	sd_nvic_SetPriority(RTC1_IRQn, 1);
 	sd_nvic_EnableIRQ(RTC1_IRQn);
 
-	sd_nvic_SetPriority(SPI1_TWI1_IRQn, 1);
+	sd_nvic_SetPriority(SPI1_TWI1_IRQn, 3);
 	sd_nvic_EnableIRQ(SPI1_TWI1_IRQn);
+
+	sd_nvic_SetPriority(TIMER1_IRQn, 3);
+	sd_nvic_EnableIRQ(TIMER1_IRQn);
 }
 
 void Periph_Config()
@@ -40,6 +45,7 @@ void Periph_Config()
 	UART_Init();
 	GPS_Init();
 	Display_Config();
+	Timer1_Init();
 }
 
 //#define NO_BLE
@@ -55,11 +61,11 @@ int main()
 	Scheduler_Init();
 	Mem_Org_Init();
 
-	//Display_Test();
-/*
+	Display_Test();
+
 	while(1)
 		__WFE();
-*/
+
 	/*Mem_Org_Track_Start_Storage();
 	Mem_Org_Store_Sample(0x01234567);
 	Mem_Org_Store_Sample(0x89ABCDEF);
@@ -106,18 +112,16 @@ int main()
 
 	while(1)
 	{
-		if(gps_sample_storage_time)
+
+		if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gga_message.fix_indi != '0') && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))
 		{
-			if((gps_sample_nr % mem_org_gps_sample_storage_interval == 0) && (mem_org_track_samples_storage_enabled == 1))
-			{
-				Mem_Org_Store_Sample(gps_sample_timestmap);
-				Ble_Uart_Data_Send(0xFF, NULL, 0, false);
-			}
-			gps_sample_storage_time = 0;
+			Mem_Org_Store_Sample(gps_sample_timestmap);
+			Ble_Uart_Data_Send(0xFF, NULL, 0, false);
+			gps_message_sample_storage_time = 0;
 		}
-		Ble_Uart_Execute_Ble_Requests_If_Available();
 
 		__WFE();
+		Ble_Uart_Execute_Ble_Requests_If_Available();
 	}
 
 	return 0;
