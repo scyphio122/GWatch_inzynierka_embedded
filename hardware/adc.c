@@ -6,6 +6,8 @@
 #include "nrf_soc.h"
 #include <sys/_stdint.h>
 #include "RTC.h"
+#include "hardware_settings.h"
+#include "nrf_gpio.h"
 
 static uint8_t*		vdd_voltage;
 volatile uint8_t   	adc_conversion_in_progress = 0;
@@ -30,6 +32,7 @@ void ADC_IRQHandler()
 */
 void ADC_Init()
 {
+	nrf_gpio_cfg_input(ADC_PIN, NRF_GPIO_PIN_NOPULL);
 	///	Reset to defdault value
 	NRF_ADC->CONFIG = 0;
 	///	Set the resolution to 8 bit. 3V (max voltage) * 1/(2^8) =~ 0,0117 V 

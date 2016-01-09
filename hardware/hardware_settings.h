@@ -57,7 +57,7 @@
 #define EXT_FLASH_WP_PIN	(uint8_t)18
 #define EXT_FLASH_ON_PIN	(uint8_t)19
 
-
+#define ADC_PIN				(uint8_t)6
 
 
 
