@@ -12,6 +12,7 @@
 #include "UART.h"
 #include "display.h"
 
+uint8_t 					gps_is_powered_on = 0;
 
 static const uint8_t* 		gps_msg_header[] = {"$GPGGA", "$GPGSA", "$GPGSV", "$GPRMC", "$GPVTG", "$PGTOP"};
 static uint8_t				gps_msg_frequency[] = "1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0";
@@ -60,6 +61,7 @@ inline void GPS_Turn_On()
 	UART_Start_Rx();
 
 	NRF_GPIO->OUTCLR = 1 << GPS_ON_PIN;
+	gps_is_powered_on = 1;
 }
 
 /**
@@ -70,6 +72,7 @@ inline void GPS_Turn_Off()
 	UART_Stop_Rx();
 	UART_Disable();
 	NRF_GPIO->OUTSET = 1 << GPS_ON_PIN;
+	gps_is_powered_on = 0;
 }
 
 

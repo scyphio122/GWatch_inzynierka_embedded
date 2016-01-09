@@ -21,7 +21,7 @@
 #define DISPLAY_LATITUDE_START_LINE			(uint8_t)33
 #define DISPLAY_LONGTITUDE_DESC_START_LINE 	(uint8_t)49
 #define DISPLAY_LONGTITUDE_START_LINE		(uint8_t)57
-
+#define DISPLAY_SAMPLING_STATUS_LINE		(uint8_t)88
 
 
 extern uint8_t display_array[14*96];
@@ -43,7 +43,7 @@ void Display_Write_Buffer(uint8_t* text, uint8_t text_size, uint8_t line_number,
 
 void Display_Flush_Buffer();
 
-void Display_Update_BLE_Conn(uint8_t ble_conn_status);
+void Display_Update_BLE_Conn(uint16_t ble_conn_status);
 
 void Display_Update_GPS_Power_On();
 
@@ -53,6 +53,7 @@ void Display_Write_Longtitude();
 
 void Display_Write_Latitude();
 
+void Display_Update_Battery_Level();
 
 
 #endif /* HARDWARE_DISPLAY_H_ */

@@ -93,6 +93,7 @@ typedef struct
 
 }gps_gga_msg_t;
 
+extern uint8_t 					gps_is_powered_on;
 extern uint8_t 					gps_msg_byte_index;
 extern volatile uint8_t 		gps_msg_received;
 extern uint8_t					gps_msg_size;

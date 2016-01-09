@@ -29,8 +29,9 @@
  * 					.
  * 					.
  */
-uint8_t display_array[96*14] = {0};
-volatile uint8_t disp_updt_time = 0;
+uint8_t 			display_array[96*14] = {0};
+volatile uint8_t 	disp_updt_time = 0;
+extern uint8_t 		battery_level;
 
 /**
  * \brief This function configures the SPI module for communication with Sharp 96x96 memory display
@@ -92,9 +93,13 @@ void Display_Config()
 		for(uint8_t j=1; j < 13; j++)
 			display_array[i*14 + j] = 0x00;
 	}
+
 	Display_Clear();
-	RTC_Wait(RTC_MS_TO_TICKS(100));
+	RTC_Wait(RTC_MS_TO_TICKS(5));
 	Display_Flush_Buffer();
+
+	uint8_t text[] = "SAMPLING";
+	Display_Write_Buffer(text, 8, DISPLAY_SAMPLING_STATUS_LINE, 0, true);
 
 }
 
@@ -140,26 +145,10 @@ void Display_Clear()
 	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
-__attribute__((optimize("O0")))
+__attribute__((optimize("O2")))
 void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, uint8_t char_index, bool inverted, bool dyn_alloc_buf)
 {
-	uint8_t last_char_index = char_index + text_size;
-	if(inverted != false)
-	{
-		for(uint8_t i=0; i< text_size; i++)
-		{
-			for(uint8_t char_line = 0; char_line < 8; char_line++)
-				display_array[(char_line + line_number)*14 + i + 1 + char_index] = font8x8[(text[i] - 32)*8 + char_line];
-		}
-	}
-	else
-	{
-		for(uint8_t i=0; i< text_size; i++)
-		{
-			for(uint8_t char_line = 0; char_line < 8; char_line++)
-				display_array[(char_line + line_number)*14 + i + 1 + char_index] = font8x8_inverted[(text[i] - 32)*8 + char_line];
-		}
-	}
+	Display_Write_Buffer(text, text_size, line_number, char_index, inverted);
 
 	if(dyn_alloc_buf == true)
 		free(text);
@@ -216,8 +205,7 @@ void Display_Write_Time()
 
 	text[2] = ':';
 	text[5] = ':';
-	Display_Write_Text(text, 8, DISPLAY_CLOCK_START_LINE, 2, true, false);
-	SPI_Wait_For_Transmission_End(NRF_SPI1);
+	Display_Write_Buffer(text, 8, DISPLAY_CLOCK_START_LINE, 2, true);
 }
 
 inline void Display_Flush_Buffer()
@@ -237,12 +225,10 @@ void Display_Write_Latitude()
 		lat_indi = gga_message.latitude_indi;
 	}
 
-	Display_Write_Text(&"LATITUDE:", 9, DISPLAY_LATITUDE_DESC_START_LINE, 0, true, false);
-	SPI_Wait_For_Transmission_End(NRF_SPI1);
-	Display_Write_Text(text, sizeof(text), DISPLAY_LATITUDE_START_LINE, 0, true, false);
-	SPI_Wait_For_Transmission_End(NRF_SPI1);
-	Display_Write_Text(&lat_indi, 1, DISPLAY_LATITUDE_START_LINE+8, 11, true, false);
-	SPI_Wait_For_Transmission_End(NRF_SPI1);
+	Display_Write_Buffer(&"LATITUDE:", 9, DISPLAY_LATITUDE_DESC_START_LINE, 0, true);
+	Display_Write_Buffer(text, sizeof(text), DISPLAY_LATITUDE_START_LINE, 0, true);
+	Display_Write_Buffer(&lat_indi, 1, DISPLAY_LATITUDE_START_LINE+8, 11, true);
+
 
 }
 
@@ -254,19 +240,16 @@ void Display_Write_Longtitude()
 	{
 		memcpy(text + 1, gga_message.longtitude.deg, 2);
 		memcpy(text + 4, gga_message.longtitude.min_int, 2);
-		memcpy(text + 7, gga_message.longtitude.min_fract, 5);
+		memcpy(text + 7, gga_message.longtitude.min_fract, 4);
 		long_indi = gga_message.latitude_indi;
 	}
 
-	Display_Write_Text(&"LONGTITUDE:", 11, DISPLAY_LONGTITUDE_DESC_START_LINE, 0, true, false);
-	SPI_Wait_For_Transmission_End(NRF_SPI1);
-	Display_Write_Text(text, sizeof(text), DISPLAY_LONGTITUDE_START_LINE, 0, true, false);
-	SPI_Wait_For_Transmission_End(NRF_SPI1);
-	Display_Write_Text(&long_indi, 1, DISPLAY_LONGTITUDE_START_LINE+8, 11, true, false);
-	SPI_Wait_For_Transmission_End(NRF_SPI1);
+	Display_Write_Buffer(&"LONGTITUDE:", 11, DISPLAY_LONGTITUDE_DESC_START_LINE, 0, true);
+	Display_Write_Buffer(text, sizeof(text), DISPLAY_LONGTITUDE_START_LINE, 0, true);
+	Display_Write_Buffer(&long_indi, 1, DISPLAY_LONGTITUDE_START_LINE+8, 11, true);
 }
 
-void Display_Update_BLE_Conn(uint8_t ble_conn_status)
+void Display_Update_BLE_Conn(uint16_t ble_conn_status)
 {
 	uint8_t data = ' ';
 	if(ble_conn_status != BLE_CONN_HANDLE_INVALID)
@@ -277,24 +260,63 @@ void Display_Update_BLE_Conn(uint8_t ble_conn_status)
 	{
 		data = ' ';
 	}
-	Display_Write_Buffer(data, 1, 1, 0, true);
-
+	Display_Write_Buffer(&data, 1, 1, 0, true);
+	return data;
 }
 
 void Display_Update_GPS_Power_On()
 {
 	static uint8_t cnt = 0;
-	uint8_t data[] = "GPS";
+	uint8_t data[] = "   ";
 
-	if(gga_message.fix_indi == 0 || gga_message.fix_indi == '0')
+	if(gps_is_powered_on)
 	{
-		if(++cnt % 2)
-		{
-			data = "   ";
-		}
+		memcpy(data, &"GPS", 3);
 
-	Display_Write_Buffer(data, 3, 1,  9, true);
+		if(gga_message.fix_indi == 0 || gga_message.fix_indi == '0')
+		{
+			if(++cnt % 2)
+			{
+				memcpy(data, &"   ", 3);
+			}
+		}
+	}
+	Display_Write_Buffer(data, 3, 1,  4, true);
 }
+
+void Display_Update_Sampling_Status(bool sampling_started)
+{
+    uint8_t text[] = "OFF";
+    if(sampling_started)
+    {
+    	memcpy(text, &" ON", 3);
+    	Display_Write_Buffer(text, 2, DISPLAY_SAMPLING_STATUS_LINE, 9, true);
+    }
+    else
+    {
+    	Display_Write_Buffer(text, 3, DISPLAY_SAMPLING_STATUS_LINE, 9, true);
+    }
+}
+
+void Display_Update_Battery_Level()
+{
+	static uint8_t previous_level = 100;
+
+	if(previous_level != battery_level)
+	{
+		uint8_t data[4] = {' ', ' ', ' ', '%'};
+		if(battery_level == 100)
+			sprintf(data, "%d", battery_level);
+		else
+		if(battery_level > 9)
+			sprintf(data + 1, "%d", battery_level);
+		else
+			sprintf(data + 2, "%d", battery_level);
+		data[3] = '%';
+		Display_Write_Buffer(data, sizeof(data), 1, 8, true);
+	}
+}
+
 
 void Display_Test()
 {

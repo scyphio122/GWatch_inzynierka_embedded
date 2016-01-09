@@ -8,7 +8,9 @@
 *   prescaler = 1/3, V_ref = 1.2 V, voltage_level_numbers = 255 *
 *****************************************************************/
 
-
+#define ADC_RESULT_3_VOLT 			(uint8_t)106
+#define ADC_RESULT_4p2_VOLT			(uint8_t)148
+#define ADC_WORK_RANGE				(uint8_t)42
 
 void ADC_IRQHandler(void);
 void ADC_Init(void);

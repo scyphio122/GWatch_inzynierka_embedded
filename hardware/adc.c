@@ -31,15 +31,15 @@ void ADC_IRQHandler()
 void ADC_Init()
 {
 	///	Reset to defdault value
-	NRF_ADC->CONFIG = 24;
+	NRF_ADC->CONFIG = 0;
 	///	Set the resolution to 8 bit. 3V (max voltage) * 1/(2^8) =~ 0,0117 V 
 	NRF_ADC->CONFIG |= ADC_CONFIG_RES_8bit << ADC_CONFIG_RES_Pos;
 	///	Max input voltage after prescaling for the internal ADC module is 1.2V, so we have to use 1/3 VDD prescaler
-	NRF_ADC->CONFIG |= ADC_CONFIG_INPSEL_SupplyOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos;
+	NRF_ADC->CONFIG |= ADC_CONFIG_INPSEL_AnalogInputOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos;
 	///	Use internal reference voltage (because we do not possess any other)
 	NRF_ADC->CONFIG |= ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos;
 	///	We want to measeure only VDD voltage so we do not need any AIN pin
-	NRF_ADC->CONFIG &= ~ADC_CONFIG_PSEL_Msk;
+	NRF_ADC->CONFIG |= ADC_CONFIG_PSEL_AnalogInput7 << ADC_CONFIG_PSEL_Pos;
 	///	We use internal reference voltage (VBG) so we do not need external reference voltage source pin
 	NRF_ADC->CONFIG &= ~ADC_CONFIG_EXTREFSEL_Msk;
 	

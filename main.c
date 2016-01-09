@@ -19,9 +19,12 @@
 #include "libraries/memory_organization.h"
 #include "libraries/scheduler.h"
 #include "timer.h"
-
+#include "adc.h"
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+static uint8_t 	bat_voltage;
+uint8_t 		battery_level;
 
 //#define NO_BLE
 
@@ -38,6 +41,9 @@ void NVIC_Config()
 
 	sd_nvic_SetPriority(TIMER1_IRQn, 3);
 	sd_nvic_EnableIRQ(TIMER1_IRQn);
+
+	sd_nvic_SetPriority(ADC_IRQn, 3);
+	sd_nvic_EnableIRQ(ADC_IRQn);
 }
 
 void Periph_Config()
@@ -49,6 +55,12 @@ void Periph_Config()
 	GPS_Init();
 	Display_Config();
 	Timer1_Init();
+	ADC_Init();
+}
+
+void Calculate_Battery_Level()
+{
+	battery_level = ((bat_voltage - ADC_RESULT_3_VOLT)*100) / ADC_WORK_RANGE;
 }
 
 //#define NO_BLE
@@ -89,10 +101,19 @@ int main()
 		Ble_Uart_Execute_Ble_Requests_If_Available();
 		if(disp_updt_time)
 		{
+			ADC_Get_Bat_Voltage(&bat_voltage);
+			Calculate_Battery_Level();
+
 			Display_Write_Time();
 			Display_Write_Latitude();
 			Display_Write_Longtitude();
+			Display_Update_GPS_Power_On();
+			Display_Update_Battery_Level();
+			Display_Update_Sampling_Status(mem_org_track_samples_storage_enabled);
+
+			Display_Flush_Buffer();
 			disp_updt_time = 0;
+
 		}
 	}
 
