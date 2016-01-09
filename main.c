@@ -23,6 +23,7 @@
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
+#define NO_BLE
 
 void NVIC_Config()
 {
@@ -61,10 +62,18 @@ int main()
 	Scheduler_Init();
 	Mem_Org_Init();
 
-	Display_Test();
-
+	//Display_Test();
+	Display_Clear();
+	/*uint8_t* ptr = malloc(12);
+	memcpy(ptr, &"1", 1);
 	while(1)
-		__WFE();
+	{
+		Display_Write_Text(ptr, 12, 16, true, false);
+		RTC_Wait(RTC_S_TO_TICKS(2));
+		Display_Write_Text(ptr, 12, 16, false, false);
+		RTC_Wait(RTC_S_TO_TICKS(2));
+	}*/
+
 
 	/*Mem_Org_Track_Start_Storage();
 	Mem_Org_Store_Sample(0x01234567);
@@ -109,7 +118,7 @@ int main()
 	uint32_t end_timestmap = RTC_Get_Timestamp();
 
 	RTC_Wait(3);*/
-
+	RTC_Set_Timestamp(1452341754);
 	while(1)
 	{
 
@@ -122,6 +131,11 @@ int main()
 
 		__WFE();
 		Ble_Uart_Execute_Ble_Requests_If_Available();
+		if(disp_updt_time)
+		{
+			Display_Write_Time();
+			disp_updt_time = 0;
+		}
 	}
 
 	return 0;

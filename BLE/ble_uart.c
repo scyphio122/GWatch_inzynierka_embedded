@@ -159,14 +159,17 @@ static void on_rx_write(ble_uart_t * p_uart, ble_gatts_evt_write_t * p_evt_write
 static void on_write(ble_uart_t * p_uart, ble_evt_t * p_ble_evt)
 {
     ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
-
+    static uint8_t tx_enabled = 0;
+    static uint8_t evt_enabled = 0;
     if (p_evt_write->handle == p_uart->tx_handles.cccd_handle) //Handle CCCD write to TX characteristic
     {
         on_tx_cccd_write(p_uart, p_evt_write);
+        tx_enabled = 1;
     }
     if (p_evt_write->handle == p_uart->dev_events_handles.cccd_handle) //Handle CCCD write to Device Events characteristic
     {
     	on_dev_events_cccd_write(p_uart, p_evt_write);
+    	evt_enabled = 1;
     }
 	if (p_evt_write->handle == p_uart->rx_handles.value_handle) //Handle VALUE write to RX characteristic
 	{

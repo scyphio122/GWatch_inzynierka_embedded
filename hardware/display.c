@@ -26,7 +26,7 @@
  * 					.
  */
 uint8_t display_array[96*14] = {0};
-
+volatile uint8_t disp_updt_time = 0;
 
 /**
  * \brief This function configures the SPI module for communication with Sharp 96x96 memory display
@@ -81,6 +81,11 @@ void Display_Config()
 {
 	Display_SPI_Config();
 	Sharp_VCOM_Config();
+	for(uint8_t i=0; i<96; i++)
+	{
+		display_array[i*14] = i+1;
+		display_array[i*14 + 13] = 0;
+	}
 }
 
 /**
@@ -101,7 +106,7 @@ void Display_Write_Line(uint8_t line_number)
 	SPI_Transfer_Non_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS, true);
 	//SPI_Transfer_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS);
 }
-
+__attribute__((optimize("O2")))
 void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 {
 	uint8_t cmd = SHARP_WRITA_MULTIPLE_LINES_CMD;
@@ -124,19 +129,60 @@ void Display_Clear()
 	SPI_Transfer_Non_Blocking(NRF_SPI1, ptr, 2, NULL, 0, DISP_CS, true);
 }
 
-void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number)
+__attribute__((optimize("O0")))
+void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, bool inverted, bool dyn_alloc_buf)
 {
-	for(uint8_t i=0; i< text_size; i++)
+	if(inverted != false)
 	{
-		for(uint8_t char_line = 0; char_line < 8; char_line++)
-			display_array[(char_line + line_number)*14 + i + 1] = font8x8[text[i] - 32 + char_line];
+		for(uint8_t i=0; i< text_size; i++)
+		{
+			for(uint8_t char_line = 0; char_line < 8; char_line++)
+				display_array[(char_line + line_number)*14 + i + 1] = font8x8[(text[i] - 32)*8 + char_line];
+		}
+	}
+	else
+	{
+		for(uint8_t i=0; i< text_size; i++)
+		{
+			for(uint8_t char_line = 0; char_line < 8; char_line++)
+				display_array[(char_line + line_number)*14 + i + 1] = font8x8_inverted[(text[i] - 32)*8 + char_line];
+		}
 	}
 
-	for(uint8_t i=0; i < 8; i++)
-	{
-		//Display()
-	}
+	if(dyn_alloc_buf == true)
+		free(text);
 
+	Display_Write_Consecutive_Lines(line_number, line_number + 8);
+}
+
+__attribute__((optimize("O0")))
+void Display_Write_Time()
+{
+	uint32_t timestamp = RTC_Get_Timestamp();
+
+	uint8_t seconds = timestamp % 60;
+	uint8_t mins = (timestamp % 3600) / 60;
+	uint8_t hour = (timestamp % 86400) / 3600;
+
+	//uint8_t text[8] = {0, 0, ':', 0, 0, ':', 0, 0};
+	uint8_t* text = malloc(8);
+	if(hour < 10)
+		sprintf(text+1, "%d", hour);
+	else
+		sprintf(text, "%d", hour);
+	if(mins < 10)
+		sprintf(text+4, "%d", mins);
+	else
+		sprintf(text+3, "%d", mins);
+	if(seconds < 10)
+		sprintf(text+7, "%d", seconds);
+	else
+		sprintf(text+6, "%d", seconds);
+
+	text[2] = ':';
+	text[5] = ':';
+	Display_Write_Text(text, 8, DISPLAY_CLOCK_START_LINE, true, true);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
 
@@ -156,7 +202,14 @@ void Display_Test()
 
 		Display_Write_Consecutive_Lines(0, 95);
 		SPI_Wait_For_Transmission_End(NRF_SPI1);
-		RTC_Wait(1);
+		RTC_Wait(RTC_S_TO_TICKS(3));
+		Display_Clear();
+		uint8_t* ptr = malloc(11);
+		memcpy(ptr, &"HELLO WORLD", 11);
+		Display_Write_Text(ptr, 11, 8, false, true);
+		SPI_Wait_For_Transmission_End(NRF_SPI1);
+		RTC_Wait(RTC_S_TO_TICKS(3));
+
 		/*	for(uint8_t i=0; i<96;i++)
 			{
 				Display_Write_Line(i);

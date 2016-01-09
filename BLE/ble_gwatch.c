@@ -316,7 +316,7 @@ void BLE_Init()
 	services_init();
 	sec_params_init();
 
-	sd_ble_gap_tx_power_set(-16);
+	sd_ble_gap_tx_power_set(0);
 }
 
 

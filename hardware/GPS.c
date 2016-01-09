@@ -10,6 +10,8 @@
 #include "hardware_settings.h"
 #include "libraries/fifo.h"
 #include "UART.h"
+#include "display.h"
+
 
 static const uint8_t* 		gps_msg_header[] = {"$GPGGA", "$GPGSA", "$GPGSV", "$GPRMC", "$GPVTG", "$PGTOP"};
 static uint8_t				gps_msg_frequency[] = "1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0";
@@ -22,6 +24,8 @@ uint32_t					gps_sample_nr;
 uint32_t					gps_sample_timestmap;
 volatile uint8_t			gps_message_sample_storage_time;
 uint32_t					gps_distance_meters;
+
+
 /**
  * This function initializes the GPS pins
  */
@@ -273,6 +277,7 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 		gps_sample_nr++;
 
 		gps_message_sample_storage_time = 1;
+		disp_updt_time = 1;
 		return NRF_SUCCESS;
 
 //	}
