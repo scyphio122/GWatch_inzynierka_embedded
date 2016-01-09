@@ -56,6 +56,9 @@ void GPS_Init()
  */
 inline void GPS_Turn_On()
 {
+	UART_Enable();
+	UART_Start_Rx();
+
 	NRF_GPIO->OUTCLR = 1 << GPS_ON_PIN;
 }
 
@@ -64,6 +67,8 @@ inline void GPS_Turn_On()
  */
 inline void GPS_Turn_Off()
 {
+	UART_Stop_Rx();
+	UART_Disable();
 	NRF_GPIO->OUTSET = 1 << GPS_ON_PIN;
 }
 

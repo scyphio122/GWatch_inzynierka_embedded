@@ -144,15 +144,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     {
         case BLE_GAP_EVT_CONNECTED:
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-            sd_nvic_DisableIRQ(SWI1_IRQn);
-
-//            Advertising_Pause_Data_Packet(); // If swapping was enabled, it's better to pause it to avoid pointless processor use during connection
+            Display_Update_BLE_Conn(m_conn_handle);
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
-            sd_nvic_EnableIRQ(SWI1_IRQn);
-
+            Display_Update_BLE_Conn(m_conn_handle);
 			Advertising_Start();
             break;
 

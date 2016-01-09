@@ -308,8 +308,7 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 		spi_0_rx_index = 0;
 		spi_0_cs_pin = cs_pin;
 		spi_0_transfer_ongoing_flag = 1;
-		if(dynamically_allcated_buf)
-			spi_0_dynamically_allocated_buf = dynamically_allcated_buf;
+		spi_0_dynamically_allocated_buf = dynamically_allcated_buf;
 
 	}
 #ifdef SPI1_USED
@@ -323,8 +322,7 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 		spi_1_rx_index = 0;
 		spi_1_cs_pin = cs_pin;
 		spi_1_transfer_ongoing_flag = 1;
-		if(dynamically_allcated_buf)
-			spi_1_dynamically_allocated_buf = dynamically_allcated_buf;
+		spi_1_dynamically_allocated_buf = dynamically_allcated_buf;
 
 	}
 #endif
@@ -345,7 +343,7 @@ uint32_t SPI_Transfer_Non_Blocking(NRF_SPI_Type* SPI, uint8_t* data_to_send, uin
 	return NRF_SUCCESS;
 }
 
-void SPI_Wait_For_Transmission_End(NRF_SPI_Type* SPI)
+volatile void SPI_Wait_For_Transmission_End(NRF_SPI_Type* SPI)
 {
 	volatile uint8_t* flag = NULL;
 	if(SPI == NRF_SPI0)

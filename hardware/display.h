@@ -37,11 +37,21 @@ void Display_Clear();
 
 void Display_Test();
 
-void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, bool inverted, bool dyn_alloc_buf);
+void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, uint8_t char_index, bool inverted, bool dyn_alloc_buf);
 
+void Display_Write_Buffer(uint8_t* text, uint8_t text_size, uint8_t line_number, uint8_t char_index, bool inverted);
 
+void Display_Flush_Buffer();
 
+void Display_Update_BLE_Conn(uint8_t ble_conn_status);
 
+void Display_Update_GPS_Power_On();
+
+void Display_Write_Time();
+
+void Display_Write_Longtitude();
+
+void Display_Write_Latitude();
 
 
 

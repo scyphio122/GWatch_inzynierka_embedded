@@ -23,7 +23,7 @@
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define NO_BLE
+//#define NO_BLE
 
 void NVIC_Config()
 {
@@ -43,6 +43,8 @@ void NVIC_Config()
 void Periph_Config()
 {
 	RTC_Config();
+	RTC_Start();
+
 	UART_Init();
 	GPS_Init();
 	Display_Config();
@@ -53,71 +55,25 @@ void Periph_Config()
 
 int main()
 {
-	Periph_Config();
 	BLE_Init();
-	Advertising_Init();
 	NVIC_Config();
-	RTC_Start();
+
+	Periph_Config();
+	Advertising_Init();
 	Ext_Flash_Init();
 	Scheduler_Init();
 	Mem_Org_Init();
 
 	//Display_Test();
-	Display_Clear();
-	/*uint8_t* ptr = malloc(12);
-	memcpy(ptr, &"1", 1);
-	while(1)
-	{
-		Display_Write_Text(ptr, 12, 16, true, false);
-		RTC_Wait(RTC_S_TO_TICKS(2));
-		Display_Write_Text(ptr, 12, 16, false, false);
-		RTC_Wait(RTC_S_TO_TICKS(2));
-	}*/
 
 
-	/*Mem_Org_Track_Start_Storage();
-	Mem_Org_Store_Sample(0x01234567);
-	Mem_Org_Store_Sample(0x89ABCDEF);
-	Mem_Org_Track_Stop_Storage();
-
-	Mem_Org_Track_Start_Storage();
-	Mem_Org_Store_Sample(0x01234567);
-	Mem_Org_Store_Sample(0x89ABCDEF);
-	Mem_Org_Track_Stop_Storage();
-
-	uint32_t key = 0;
-	uint32_t err_code = 0;
-	err_code = Mem_Org_Find_Key(1, &key);
-	err_code = Mem_Org_Find_Key(2, &key);
-	err_code = Mem_Org_Find_Key(3, &key);
-	err_code = Mem_Org_Find_Key(4, &key);
-	err_code = Mem_Org_Find_Key(5, &key);
-	err_code = Mem_Org_Find_Key(6, &key);
-	err_code = Mem_Org_Find_Key(7, &key);
-	err_code = Mem_Org_Find_Key(8, &key);
-	err_code = Mem_Org_Find_Key(9, &key);
-	err_code = Mem_Org_Find_Key(10, &key);
-	err_code = Mem_Org_Find_Key(11, &key);
-//		Mem_Org_Clear_Tracks_Memory();*/
 #ifndef NO_BLE
 	Advertising_Start();
 #endif
-	UART_Enable();
 
-	UART_Start_Rx();
 	GPS_Turn_On();
-	/*uint32_t start_timestamp = RTC_Get_Timestamp();
-	while(gga_message.fix_indi == '0' || gga_message.fix_indi == 0)
-	{
-			__WFE();
-	}
-
-	//Ble_Uart_Notify_Central(0, &gga_message.fix_indi, 1);
 
 
-	uint32_t end_timestmap = RTC_Get_Timestamp();
-
-	RTC_Wait(3);*/
 	RTC_Set_Timestamp(1452341754);
 	while(1)
 	{
@@ -134,6 +90,8 @@ int main()
 		if(disp_updt_time)
 		{
 			Display_Write_Time();
+			Display_Write_Latitude();
+			Display_Write_Longtitude();
 			disp_updt_time = 0;
 		}
 	}

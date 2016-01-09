@@ -17,6 +17,10 @@
 #include "RTC.h"
 #include "sharp_display_font.h"
 #include "stdlib.h"
+#include "GPS.h"
+#include "ble_gwatch.h"
+#include "ble_types.h"
+
 
 /* Structure : first byte - command
  * 				line 1    -	line_number, data,
@@ -85,7 +89,13 @@ void Display_Config()
 	{
 		display_array[i*14] = i+1;
 		display_array[i*14 + 13] = 0;
+		for(uint8_t j=1; j < 13; j++)
+			display_array[i*14 + j] = 0x00;
 	}
+	Display_Clear();
+	RTC_Wait(RTC_MS_TO_TICKS(100));
+	Display_Flush_Buffer();
+
 }
 
 /**
@@ -117,7 +127,7 @@ void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 	SPI_Wait_For_Transmission_End(NRF_SPI1);
 
 	SPI_Transfer_Non_Blocking(NRF_SPI1, &display_array[start_line*14], (end_line - start_line)*14, NULL, 0, DISP_CS, false);
-
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
 void Display_Clear()
@@ -127,17 +137,19 @@ void Display_Clear()
 	ptr[0] = SHARP_CLEAR_SCREEN;
 	ptr[1] = 0;
 	SPI_Transfer_Non_Blocking(NRF_SPI1, ptr, 2, NULL, 0, DISP_CS, true);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
 __attribute__((optimize("O0")))
-void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, bool inverted, bool dyn_alloc_buf)
+void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, uint8_t char_index, bool inverted, bool dyn_alloc_buf)
 {
+	uint8_t last_char_index = char_index + text_size;
 	if(inverted != false)
 	{
 		for(uint8_t i=0; i< text_size; i++)
 		{
 			for(uint8_t char_line = 0; char_line < 8; char_line++)
-				display_array[(char_line + line_number)*14 + i + 1] = font8x8[(text[i] - 32)*8 + char_line];
+				display_array[(char_line + line_number)*14 + i + 1 + char_index] = font8x8[(text[i] - 32)*8 + char_line];
 		}
 	}
 	else
@@ -145,7 +157,7 @@ void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, b
 		for(uint8_t i=0; i< text_size; i++)
 		{
 			for(uint8_t char_line = 0; char_line < 8; char_line++)
-				display_array[(char_line + line_number)*14 + i + 1] = font8x8_inverted[(text[i] - 32)*8 + char_line];
+				display_array[(char_line + line_number)*14 + i + 1 + char_index] = font8x8_inverted[(text[i] - 32)*8 + char_line];
 		}
 	}
 
@@ -154,6 +166,29 @@ void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, b
 
 	Display_Write_Consecutive_Lines(line_number, line_number + 8);
 }
+
+__attribute__((optimize("O2")))
+void Display_Write_Buffer(uint8_t* text, uint8_t text_size, uint8_t line_number, uint8_t char_index, bool inverted)
+{
+	uint8_t last_char_index = char_index + text_size;
+	if(inverted != false)
+	{
+		for(uint8_t i=0; i< text_size; i++)
+		{
+			for(uint8_t char_line = 0; char_line < 8; char_line++)
+				display_array[(char_line + line_number)*14 + i + 1 + char_index] = font8x8[(text[i] - 32)*8 + char_line];
+		}
+	}
+	else
+	{
+		for(uint8_t i=0; i< text_size; i++)
+		{
+			for(uint8_t char_line = 0; char_line < 8; char_line++)
+				display_array[(char_line + line_number)*14 + i + 1 + char_index] = font8x8_inverted[(text[i] - 32)*8 + char_line];
+		}
+	}
+}
+
 
 __attribute__((optimize("O0")))
 void Display_Write_Time()
@@ -181,11 +216,85 @@ void Display_Write_Time()
 
 	text[2] = ':';
 	text[5] = ':';
-	Display_Write_Text(text, 8, DISPLAY_CLOCK_START_LINE, true, false);
+	Display_Write_Text(text, 8, DISPLAY_CLOCK_START_LINE, 2, true, false);
 	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
+inline void Display_Flush_Buffer()
+{
+	Display_Write_Consecutive_Lines(0, 95);
+}
 
+void Display_Write_Latitude()
+{
+	uint8_t text[12] = {'X', 'X', 'X', '*', 'X', 'X', '.', 'X', 'X', 'X', 'X', '\''};
+	uint8_t lat_indi = 'X';
+	if(gga_message.fix_indi != 0 && gga_message.fix_indi != '0')
+	{
+		memcpy(text + 1, gga_message.latitude.deg, 2);
+		memcpy(text + 4, gga_message.latitude.min_int, 2);
+		memcpy(text + 7, gga_message.latitude.min_fract, 5);
+		lat_indi = gga_message.latitude_indi;
+	}
+
+	Display_Write_Text(&"LATITUDE:", 9, DISPLAY_LATITUDE_DESC_START_LINE, 0, true, false);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
+	Display_Write_Text(text, sizeof(text), DISPLAY_LATITUDE_START_LINE, 0, true, false);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
+	Display_Write_Text(&lat_indi, 1, DISPLAY_LATITUDE_START_LINE+8, 11, true, false);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
+
+}
+
+void Display_Write_Longtitude()
+{
+	uint8_t text[12] = {'X', 'X', 'X', '*', 'X', 'X', '.', 'X', 'X', 'X', 'X', '\''};
+	uint8_t long_indi = 'X';
+	if(gga_message.fix_indi != 0 && gga_message.fix_indi != '0')
+	{
+		memcpy(text + 1, gga_message.longtitude.deg, 2);
+		memcpy(text + 4, gga_message.longtitude.min_int, 2);
+		memcpy(text + 7, gga_message.longtitude.min_fract, 5);
+		long_indi = gga_message.latitude_indi;
+	}
+
+	Display_Write_Text(&"LONGTITUDE:", 11, DISPLAY_LONGTITUDE_DESC_START_LINE, 0, true, false);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
+	Display_Write_Text(text, sizeof(text), DISPLAY_LONGTITUDE_START_LINE, 0, true, false);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
+	Display_Write_Text(&long_indi, 1, DISPLAY_LONGTITUDE_START_LINE+8, 11, true, false);
+	SPI_Wait_For_Transmission_End(NRF_SPI1);
+}
+
+void Display_Update_BLE_Conn(uint8_t ble_conn_status)
+{
+	uint8_t data = ' ';
+	if(ble_conn_status != BLE_CONN_HANDLE_INVALID)
+	{
+		data = 'B';
+	}
+	else
+	{
+		data = ' ';
+	}
+	Display_Write_Buffer(data, 1, 1, 0, true);
+
+}
+
+void Display_Update_GPS_Power_On()
+{
+	static uint8_t cnt = 0;
+	uint8_t data[] = "GPS";
+
+	if(gga_message.fix_indi == 0 || gga_message.fix_indi == '0')
+	{
+		if(++cnt % 2)
+		{
+			data = "   ";
+		}
+
+	Display_Write_Buffer(data, 3, 1,  9, true);
+}
 
 void Display_Test()
 {
@@ -206,7 +315,7 @@ void Display_Test()
 		Display_Clear();
 		uint8_t* ptr = malloc(11);
 		memcpy(ptr, &"HELLO WORLD", 11);
-		Display_Write_Text(ptr, 11, 8, false, true);
+		Display_Write_Text(ptr, 11, 8, 0, false, true);
 		SPI_Wait_For_Transmission_End(NRF_SPI1);
 		RTC_Wait(RTC_S_TO_TICKS(3));
 
