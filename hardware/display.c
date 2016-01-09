@@ -164,8 +164,8 @@ void Display_Write_Time()
 	uint8_t mins = (timestamp % 3600) / 60;
 	uint8_t hour = (timestamp % 86400) / 3600;
 
-	//uint8_t text[8] = {0, 0, ':', 0, 0, ':', 0, 0};
-	uint8_t* text = malloc(8);
+	uint8_t text[8] = {'0', '0', ':', '0', '0', ':', '0', '0'};
+	//uint8_t* text = malloc(8);
 	if(hour < 10)
 		sprintf(text+1, "%d", hour);
 	else
@@ -181,7 +181,7 @@ void Display_Write_Time()
 
 	text[2] = ':';
 	text[5] = ':';
-	Display_Write_Text(text, 8, DISPLAY_CLOCK_START_LINE, true, true);
+	Display_Write_Text(text, 8, DISPLAY_CLOCK_START_LINE, true, false);
 	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
