@@ -369,6 +369,19 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			Ble_Uart_Notify_Central(8, test_data, sizeof(text), true);
 			//Ble_Uart_Wait_Till_Transmission_In_Progress();
 			//RTC_Wait(1);
+			break;
+		}
+
+		case BLE_GPS_ON:
+		{
+			GPS_Turn_On();
+			break;
+		}
+
+		case BLE_GPS_OFF:
+		{
+			GPS_Turn_Off();
+			break;
 		}
 	}
 

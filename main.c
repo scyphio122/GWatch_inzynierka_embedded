@@ -56,6 +56,7 @@ void Periph_Config()
 	Display_Config();
 	Timer1_Init();
 	ADC_Init();
+	RTC_Schedule_IRQ(RTC_US_TO_TICKS(1000000), &NRF_RTC1->CC[2]);
 }
 
 void Calculate_Battery_Level()
@@ -76,6 +77,8 @@ int main()
 	Scheduler_Init();
 	Mem_Org_Init();
 
+
+
 	//Display_Test();
 
 
@@ -83,7 +86,7 @@ int main()
 	Advertising_Start();
 #endif
 
-	GPS_Turn_On();
+	//GPS_Turn_On();
 
 
 	RTC_Set_Timestamp(1451606400);
@@ -99,6 +102,7 @@ int main()
 
 		__WFE();
 		Ble_Uart_Execute_Ble_Requests_If_Available();
+
 		if(disp_updt_time)
 		{
 			ADC_Get_Bat_Voltage(&bat_voltage);

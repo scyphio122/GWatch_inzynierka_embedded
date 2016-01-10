@@ -286,7 +286,7 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 		gps_sample_nr++;
 
 		gps_message_sample_storage_time = 1;
-		disp_updt_time = 1;
+		//disp_updt_time = 1;
 		return NRF_SUCCESS;
 
 //	}

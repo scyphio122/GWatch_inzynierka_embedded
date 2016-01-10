@@ -5,6 +5,8 @@
 #include "UART.h"
 #include "WATCHDOG.h"
 #include "nrf_soc.h"
+#include "display.h"
+
 
 volatile char second = 0;
 volatile char minute = 0;
@@ -35,6 +37,8 @@ void RTC1_IRQHandler()
 	if(NRF_RTC1->EVENTS_COMPARE[2])
 	{
 		NRF_RTC1->EVENTS_COMPARE[2] = 0;
+		NRF_RTC1->CC[2] += (RTC_MS_TO_TICKS(1000));
+		disp_updt_time = 1;
 	}
 	if(NRF_RTC1->EVENTS_COMPARE[3])				/// Used for Display VCOM pin
 	{
@@ -54,6 +58,9 @@ void RTC_Config()
 	NRF_RTC1->PRESCALER = RTC_PRESCALER;
 	///	Enable the interrupts on CC[0] register
 	NRF_RTC1->INTENSET = RTC_INTENSET_COMPARE0_Enabled<<RTC_INTENSET_COMPARE0_Pos;
+
+	NRF_RTC1->EVTENSET = RTC_EVTENSET_COMPARE2_Msk;
+	NRF_RTC1->INTENSET = RTC_INTENSET_COMPARE2_Msk;
 	///	Enable the overflow interrupt
 	NRF_RTC1->INTENSET = RTC_INTENSET_OVRFLW_Enabled<<RTC_INTENSET_OVRFLW_Pos;
 }
@@ -93,6 +100,11 @@ uint8_t RTC_Set_Timestamp(uint32_t timestamp)
 	
 	///	The user tried to "reverse" the timestamp
 	return RTC_OP_ERROR;
+}
+
+inline void RTC_Schedule_IRQ(uint32_t ticks, uint32_t* cc_register)
+{
+	*cc_register = ticks;
 }
 
 void RTC_Wait(uint32_t time)

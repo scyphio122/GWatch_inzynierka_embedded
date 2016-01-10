@@ -93,5 +93,6 @@ uint16_t Get_Integer_Day_Number_Between_Timestamps(uint32_t earlier_timestamp, u
  *	\param date 		-	Pointer to the structure where the date will be held */
 void TranslateTimestampToDate(uint32_t timestamp, date_t* date);
 
+void RTC_Schedule_IRQ(uint32_t ticks, uint32_t* cc_register);
 
 #endif /* RTC_H_INCLUDED */

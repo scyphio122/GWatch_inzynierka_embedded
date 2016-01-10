@@ -136,7 +136,6 @@ typedef enum
 	BLE_GET_GPS_POS_CMD 					= (uint8_t)2,
 	BLE_GET_GPS_VELOCITY 					= (uint8_t)3,
 	BLE_INDICATE_GPS_FIX 					= (uint8_t)4,
-	BLE_GET_SATTELITES_USED					= (uint8_t)12,
 	BLE_GET_HISTORY_TRACK 					= (uint8_t)5,
 	BLE_GET_AVAILABLE_TRACKS 				= (uint8_t)6,
 	BLE_GET_BAT_VOLT 						= (uint8_t)7,
@@ -144,6 +143,9 @@ typedef enum
 	BLE_ENABLE_GPS_SAMPLES_STORAGE 			= (uint8_t)9,
 	BLE_DISABLE_GPS_SAMPLES_STORAGE 		= (uint8_t)10,
 	BLE_CLEAR_TRACK_MEMORY					= (uint8_t)11,
+	BLE_GET_SATTELITES_USED					= (uint8_t)12,
+	BLE_GPS_ON								= (uint8_t)13,
+	BLE_GPS_OFF								= (uint8_t)14
 
 }ble_uart_commands_e;
 

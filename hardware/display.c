@@ -217,7 +217,7 @@ void Display_Write_Latitude()
 {
 	uint8_t text[12] = {'X', 'X', 'X', '*', 'X', 'X', '.', 'X', 'X', 'X', 'X', '\''};
 	uint8_t lat_indi = 'X';
-	if(gga_message.fix_indi != 0 && gga_message.fix_indi != '0')
+	if(gga_message.fix_indi != 0 && gga_message.fix_indi != '0' && gps_is_powered_on)
 	{
 		memcpy(text, gga_message.latitude.deg, 3);
 		memcpy(text + 4, gga_message.latitude.min_int, 2);
@@ -236,7 +236,7 @@ void Display_Write_Longtitude()
 {
 	uint8_t text[12] = {'X', 'X', 'X', '*', 'X', 'X', '.', 'X', 'X', 'X', 'X', '\''};
 	uint8_t long_indi = 'X';
-	if(gga_message.fix_indi != 0 && gga_message.fix_indi != '0')
+	if(gga_message.fix_indi != 0 && gga_message.fix_indi != '0' && gps_is_powered_on)
 	{
 		memcpy(text, gga_message.longtitude.deg, 3);
 		memcpy(text + 4, gga_message.longtitude.min_int, 2);
