@@ -86,7 +86,7 @@ int main()
 	GPS_Turn_On();
 
 
-	RTC_Set_Timestamp(1452341754);
+	RTC_Set_Timestamp(1451606400);
 	while(1)
 	{
 

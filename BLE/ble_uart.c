@@ -302,8 +302,9 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 	{
 		case BLE_TIMESTAMP_SET_CMD:
 		{
-			uint32_t* timestamp_to_set = (uint32_t*)&p_data[1];
-			RTC_Set_Timestamp(*timestamp_to_set);
+			uint32_t timestamp_to_set = 0;
+			memcpy(&timestamp_to_set, (uint32_t*)&p_data[1], sizeof(uint32_t));
+			RTC_Set_Timestamp(timestamp_to_set);
 			break;
 		}
 		case BLE_INDICATE_GPS_FIX:
