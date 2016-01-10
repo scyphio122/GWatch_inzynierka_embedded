@@ -986,11 +986,16 @@ uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 				///	Send the current position. Because of its size it must be sent in 3 packages
 				///	Send Latitude first
 				Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.latitude, sizeof(gga_message.latitude) + sizeof(gga_message.latitude_indi), false);
+
+				Ble_Uart_Wait_For_Transmission_End();
 				///	SenD Longtitude
 				Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.longtitude, sizeof(gga_message.longtitude) + sizeof(gga_message.latitude_indi), false);
+				Ble_Uart_Wait_For_Transmission_End();
 				///	Send Altitude
 				Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.altitude, sizeof(gga_message.altitude) + sizeof(gga_message.altitude_unit), false);
+				Ble_Uart_Wait_For_Transmission_End();
 
+				RTC_Wait(RTC_MS_TO_TICKS(100));
 				break;
 			}
 			case BLE_GET_AVAILABLE_TRACKS:

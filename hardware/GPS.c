@@ -195,6 +195,7 @@ uint32_t GPS_Parse_GGA_Message(gps_gga_msg_t* msg, uint8_t* msg_copy)
 				break;
 			}
 			case 1:	///	Latitude
+				msg->latitude.deg[0] = '0';
 				memcpy(&msg->latitude.deg[1], &msg_copy[temp_index], 2);
 				memcpy(msg->latitude.min_int, &msg_copy[temp_index+2],2);
 				memcpy(msg->latitude.min_fract, &msg_copy[temp_index+5], 4);
