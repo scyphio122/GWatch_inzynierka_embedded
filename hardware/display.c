@@ -290,7 +290,7 @@ void Display_Update_Sampling_Status(bool sampling_started)
     if(sampling_started)
     {
     	memcpy(text, &" ON", 3);
-    	Display_Write_Buffer(text, 2, DISPLAY_SAMPLING_STATUS_LINE, 9, true);
+    	Display_Write_Buffer(text, 3, DISPLAY_SAMPLING_STATUS_LINE, 9, true);
     }
     else
     {

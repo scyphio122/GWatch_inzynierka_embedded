@@ -265,25 +265,44 @@ static void Ble_Uart_Wait_Till_Packet_Transmission_In_Progress()
 /**
  * \brief This function blocks program execution until the single BLE packet is transmitted
  */
-static void Ble_Uart_Wait_Till_Notification_Packet_In_Progress()
+static uint32_t  Ble_Uart_Wait_Till_Notification_Packet_In_Progress()
 {
-	while(ble_notification_packet_in_progress)
+	RTC_Timeout(RTC_S_TO_TICKS(1));
+	while(ble_notification_packet_in_progress && !timeout_flag)
 	{
 		__WFE();
 	}
+	RTC_Cancel_Timeout();
+	if(timeout_flag)
+	{
+		timeout_flag = 0;
+		return NRF_ERROR_INTERNAL;
+	}
 
-	return;
+	timeout_flag = 0;
+	return NRF_SUCCESS;;
 }
 
 /***
  * \brief This function blocks program execution until entire message (even more than single packet) is transmitted
  */
-void Ble_Uart_Wait_For_Transmission_End()
+uint32_t Ble_Uart_Wait_For_Transmission_End()
 {
-	while(ble_tx_in_progress)
+	RTC_Timeout(RTC_S_TO_TICKS(1));
+	while(ble_tx_in_progress && !timeout_flag)
 	{
 		__WFE();
 	}
+	RTC_Cancel_Timeout();
+	if(timeout_flag)
+	{
+		timeout_flag = 0;
+		return NRF_ERROR_INTERNAL;
+	}
+
+	timeout_flag = 0;
+
+	return NRF_SUCCESS;
 }
 
 
@@ -524,11 +543,18 @@ static uint32_t Ble_Uart_Notification_Single_Packet_Send(ble_uart_t* p_uart, uin
 	        hvx_params.p_len  = &hvx_len;
 	        hvx_params.p_data = ble_uart_tx_buffer;
 
-	        Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
+
 	    	///	Set the ble transmission flag high to indicate ongoing transmission
 	    	ble_notification_packet_in_progress = true;
 	    	///	Send the data
 	        err_code = sd_ble_gatts_hvx(p_uart->conn_handle, &hvx_params);
+
+	        err_code = Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
+	        ///	If error occured, retransmit the packet
+	        if(err_code != NRF_SUCCESS)
+	        {
+	        	sd_ble_gatts_hvx(p_uart->conn_handle, &hvx_params);
+	        }
 
 
 	        ble_uart_tx_data_size -= data_size;

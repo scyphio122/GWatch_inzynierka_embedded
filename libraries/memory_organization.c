@@ -378,15 +378,17 @@ uint32_t Mem_Org_List_Tracks_Through_BLE()
 	uint32_t temp_address = MEM_ORG_KEY_AREA_START_ADDRESS;
 	uint32_t temp_key = 0;
 	uint16_t temp_track_number = 0;
-	uint8_t  data_buffer[6];
+	uint8_t  data_buffer[5];
 	uint32_t encoded_address = 0;
 	RTC_Timeout(RTC_S_TO_TICKS(2));
 
 	///	Send the packet informing how many available tracks there is
 	Ble_Uart_Data_Send(BLE_GET_AVAILABLE_TRACKS, &mem_org_tracks_stored, sizeof(mem_org_tracks_stored), false);
-
+	Ble_Uart_Wait_For_Transmission_End();
 	do
 	{
+		if(temp_address % INTERNAL_FLASH_PAGE_SIZE == 0)
+			temp_address += sizeof(mem_org_flash_page_header_t);
 		memcpy(&temp_key, (uint32_t*)temp_address, sizeof(uint32_t));
 
 		if(temp_key != 0xFFFFFFFF)
@@ -399,14 +401,14 @@ uint32_t Mem_Org_List_Tracks_Through_BLE()
 				///	Get the track timestamp
 				encoded_address = Mem_Org_Get_Key_Encoded_Address(temp_key);
 				///	Put the timestamp in the buffer
-				memcpy(&data_buffer[2], (uint32_t*)(encoded_address + sizeof(mem_org_flash_page_header_t)), sizeof(uint32_t));
+				memcpy(&data_buffer[1], (uint32_t*)(encoded_address + sizeof(mem_org_flash_page_header_t)), sizeof(uint32_t));
 
 				///	Send the track number and track timestamp
 				Ble_Uart_Data_Send(BLE_GET_AVAILABLE_TRACKS, data_buffer, sizeof(data_buffer), false);
+				Ble_Uart_Wait_For_Transmission_End();
 				///	Increase the
 				temp_address += 4;
-				if(temp_address % INTERNAL_FLASH_PAGE_SIZE == 0)
-					temp_address += sizeof(mem_org_flash_page_header_t);
+
 			}
 			else
 			{
