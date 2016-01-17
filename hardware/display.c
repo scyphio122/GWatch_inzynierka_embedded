@@ -104,7 +104,9 @@ void Display_Config()
 }
 
 /**
- * line number from 0 to 95
+ * \brief This function writes single line from the display_array buffer to the display
+ *
+ * \param line_number - the line number from (0 to 95)
  */
 void Display_Write_Line(uint8_t line_number)
 {
@@ -121,6 +123,13 @@ void Display_Write_Line(uint8_t line_number)
 	SPI_Transfer_Non_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS, true);
 	//SPI_Transfer_Blocking(NRF_SPI1, line_buffer, 16, NULL, 0, DISP_CS);
 }
+
+/**
+ * \brief This function writes more than one line from the display_array buffer to the display
+ *
+ * \param start_line - the start line index (0-95)
+ * \param end)line - the end line index(start_line - 95)
+ */
 __attribute__((optimize("O2")))
 void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 {
@@ -135,6 +144,9 @@ void Display_Write_Consecutive_Lines(uint8_t start_line, uint8_t end_line)
 	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
+/**
+ * \brief This function clears entire display and sets it backgrount to white
+ */
 void Display_Clear()
 {
 	uint8_t* ptr;
@@ -145,6 +157,15 @@ void Display_Clear()
 	SPI_Wait_For_Transmission_End(NRF_SPI1);
 }
 
+/**
+ * \brief This function writes the given text directly to the display
+ * \param text - the text to be written
+ * \param text_size - size of the text to write
+ * \param line_number - the line where the text should be put (0 - 95)
+ * \param char_index - the index of the character on the display from which the text should be displayed (0 - 11)
+ * \param inverted - 1 if white text on black background, 0 otherwise
+ * \param dyn_allocated - 1 if the buffer should be freed, 0 - if it lies on stack
+ */
 __attribute__((optimize("O2")))
 void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, uint8_t char_index, bool inverted, bool dyn_alloc_buf)
 {
@@ -156,6 +177,15 @@ void Display_Write_Text(uint8_t* text, uint8_t text_size, uint8_t line_number, u
 	Display_Write_Consecutive_Lines(line_number, line_number + 8);
 }
 
+/**
+ * \brief This function writes the given data to the display buffer
+ *
+ * \param text - the text to be written
+ * \param text_size - size of the text to write
+ * \param line_number - the line where the text should be put (0 - 95)
+ * \param char_index - the index of the character on the display from which the text should be displayed (0 - 11)
+ * \param inverted - 1 if white text on black background, 0 otherwise
+ */
 __attribute__((optimize("O2")))
 void Display_Write_Buffer(uint8_t* text, uint8_t text_size, uint8_t line_number, uint8_t char_index, bool inverted)
 {
@@ -178,8 +208,11 @@ void Display_Write_Buffer(uint8_t* text, uint8_t text_size, uint8_t line_number,
 	}
 }
 
-
-__attribute__((optimize("O0")))
+/**
+ * \brief This function writes the current time into the display buffer
+ *
+ */
+__attribute__((optimize("O2")))
 void Display_Write_Time()
 {
 	uint32_t timestamp = RTC_Get_Timestamp();
@@ -208,11 +241,17 @@ void Display_Write_Time()
 	Display_Write_Buffer(text, 8, DISPLAY_CLOCK_START_LINE, 2, true);
 }
 
+/**
+ * \brief This function writes the entire display_array buffer to the display
+ */
 inline void Display_Flush_Buffer()
 {
 	Display_Write_Consecutive_Lines(0, 95);
 }
 
+/**
+ * \brief This function writes the latitude to the latitude area in the display_array buffer
+ */
 void Display_Write_Latitude()
 {
 	uint8_t text[12] = {'X', 'X', 'X', '*', 'X', 'X', '.', 'X', 'X', 'X', 'X', '\''};
@@ -232,6 +271,9 @@ void Display_Write_Latitude()
 
 }
 
+/**
+ * \brief This function writes the longtitude to the longtitude area in the display_array buffer
+ */
 void Display_Write_Longtitude()
 {
 	uint8_t text[12] = {'X', 'X', 'X', '*', 'X', 'X', '.', 'X', 'X', 'X', 'X', '\''};
@@ -249,6 +291,9 @@ void Display_Write_Longtitude()
 	Display_Write_Buffer(&long_indi, 1, DISPLAY_LONGTITUDE_START_LINE+8, 11, true);
 }
 
+/**
+ * \brief This function writes the indicator to the display whether the device is in BLE connection state or not
+ */
 void Display_Update_BLE_Conn(uint16_t ble_conn_status)
 {
 	uint8_t data = ' ';
@@ -264,6 +309,9 @@ void Display_Update_BLE_Conn(uint16_t ble_conn_status)
 	return data;
 }
 
+/**
+ * \brief This function writes the indicator to the display whether the GPS module is powered on or not
+ */
 void Display_Update_GPS_Power_On()
 {
 	static uint8_t cnt = 0;
@@ -284,6 +332,9 @@ void Display_Update_GPS_Power_On()
 	Display_Write_Buffer(data, 3, 1,  4, true);
 }
 
+/**
+ * \brief This function writes the indicator to the display whether the devices is sampling or not
+ */
 void Display_Update_Sampling_Status(bool sampling_started)
 {
     uint8_t text[] = "OFF";
@@ -298,6 +349,9 @@ void Display_Update_Sampling_Status(bool sampling_started)
     }
 }
 
+/**
+ * \brief This function writes the indicator of battery level
+ */
 void Display_Update_Battery_Level()
 {
 	static uint8_t previous_level = 100;

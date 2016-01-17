@@ -27,7 +27,7 @@
 	#define RTC_S_TO_TICKS(x)			(uint32_t)(x<<15)
 #endif
 
-
+#define ERROR_TIMEOUT					(uint32_t)0xFFFF0001
 
 typedef struct
 {

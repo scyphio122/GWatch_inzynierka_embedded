@@ -21,7 +21,7 @@ static uint32_t 	    mem_org_next_free_data_sample_address = MEM_ORG_DATA_AREA_S
 static uint16_t			mem_org_tracks_stored = 0;
 volatile uint8_t		mem_org_track_samples_storage_enabled = 0;
 static uint16_t         mem_org_track_size;
-uint8_t 				mem_org_gps_sample_storage_interval = 5;
+uint8_t 				mem_org_gps_sample_storage_interval = 15;
 /**
  * \brief This function finds the first free key address pn the page (if existing)
  *
@@ -105,6 +105,12 @@ static uint32_t Mem_Org_Key_Find_First_Free()
 	return NRF_ERROR_NOT_FOUND;
 }
 
+/**
+ * \brief This function finds the first free page where the track can be stored
+ *
+ * \return	NRF_SUCCESS - everything went fine
+ * 			NRF_ERROR_INTERNAL - timeout event occured
+ */
 static uint32_t Mem_Org_Track_Address_Find_First_Free()
 {
 	uint32_t err_code = 0;
@@ -152,6 +158,12 @@ static uint32_t Mem_Org_Track_Address_Find_First_Free()
 	return NRF_ERROR_INTERNAL;
 }
 
+/**
+ *  \brief This function initializes important pointers for the  memory organization module. It should be called t the beginning of the program
+ *
+ *  \return NRF_SUCCESS - everything went fine
+ *  		NRF_ERROR_INTERNAL - timeout occured
+ */
 uint32_t Mem_Org_Init()
 {
 	uint32_t err_code = 0;
@@ -277,7 +289,14 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 	return NRF_ERROR_INTERNAL;
 }
 
-
+/**
+ * \brief This function stores the gps sample in the memory
+ *
+ * \param timestamp - the timestamp of the sample
+ *
+ * \return 	NRF_ERROR_NO_MEM - no more available memory
+ * 			NRF_SUCCESS - sample stored without any error
+ */
 uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 {
 	mem_org_gps_sample_t sample;
@@ -290,8 +309,11 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 	///	Copy the longtitude
 	memcpy(sample.longtitude, &gga_message.longtitude, 10);
 
+	///	If the sample would be stored in between flash pages than go to the next flash page
 	if(mem_org_next_free_data_sample_address + sizeof(sample) >= (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE) + INTERNAL_FLASH_PAGE_SIZE))
 			mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE) + INTERNAL_FLASH_PAGE_SIZE) + sizeof(sample);
+
+	///	If no more memory is available - stop sampling and return error
 	if(mem_org_next_free_data_sample_address + sizeof(sample) >= MEM_ORG_DATA_AREA_END_ADDRESS)
 	{
 		Mem_Org_Track_Stop_Storage();
@@ -312,6 +334,11 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 	return NRF_SUCCESS;
 }
 
+/**
+ * \brief This function prepares the mem org module to store next track - it creates the key for it
+ *
+ * \return NRF_SUCCESS
+ */
 uint32_t Mem_Org_Track_Start_Storage()
 {
 	mem_org_tracks_stored++;
@@ -323,6 +350,11 @@ uint32_t Mem_Org_Track_Start_Storage()
 	return NRF_SUCCESS;
 }
 
+/**
+ * \brief This function writes end data for the stored track
+ *
+ * \return NRF_SUCCESS
+ */
 uint32_t Mem_Org_Track_Stop_Storage()
 {
 	uint32_t key = 0;
@@ -426,5 +458,80 @@ uint32_t Mem_Org_List_Tracks_Through_BLE()
 	timeout_flag = 0;
 	return NRF_ERROR_INTERNAL;
 }
+
+
+/**
+ * \brief This function sends via BLE the track with the given key.
+ * 			Data is send in order:  timestamp (4bytes), longitude(10bytes)  - first packet
+ * 			 						latitude(10bytes) 						- second packet
+ *
+ * \param key - key which encodes the track
+ *
+ * \return  NRF_SUCCESS - everything went fine
+ * 			ERROR_TIMEOUT - the timeouut error occured
+ * 			NRF_ERROR_NO_MEM - end of memory has been reached
+ */
+uint32_t Mem_Org_Send_Track_Via_BLE(uint32_t key)
+{
+	uint32_t address = Mem_Org_Get_Key_Encoded_Address(key);
+	uint32_t byte_counter = 0;
+	uint32_t bytes_to_send_cnt = 0;
+	mem_org_gps_sample_t sample = {0};
+
+	///	Get the number of data bytes in the track
+	memcpy(&bytes_to_send_cnt, address + 2, sizeof(uint16_t));
+
+	RTC_Timeout(RTC_S_TO_TICKS(5));
+
+	///	Send the number of bytes in the track
+	Ble_Uart_Data_Send(BLE_GET_HISTORY_TRACK, &bytes_to_send_cnt, sizeof(bytes_to_send_cnt), false);
+	Ble_Uart_Wait_For_Transmission_End();
+	do
+	{
+		///	Check if we are not out of the data memory
+		if(address + sizeof(mem_org_gps_sample_t) >= MEM_ORG_DATA_AREA_END_ADDRESS)
+			return NRF_ERROR_NO_MEM;
+
+		///	If we are trying to read the sample from in between flash pages
+		if(address + sizeof(mem_org_gps_sample_t) >= address - (address % INTERNAL_FLASH_PAGE_SIZE) + INTERNAL_FLASH_PAGE_SIZE)
+		{
+			address = address - (address % INTERNAL_FLASH_PAGE_SIZE) + INTERNAL_FLASH_PAGE_SIZE;
+		}
+
+		///	If it's the flash page beginning, set the address just after the flash page header
+		if(address % INTERNAL_FLASH_PAGE_SIZE == 0)
+		{
+			address += sizeof(mem_org_flash_page_header_t);
+		}
+
+		///	Fill in the sample
+		memcpy(&sample.timestamp, address, sizeof(sample));
+
+		///	Send the first sample part - timestamp and longtitude
+		Ble_Uart_Data_Send(BLE_GET_HISTORY_TRACK, &sample, sizeof(sample.timestamp) + sizeof(sample.longtitude), false);
+		///	Wait till the packet is sent
+		Ble_Uart_Wait_For_Transmission_End();
+		///	Send next packet with latitude
+		Ble_Uart_Data_Send(BLE_GET_HISTORY_TRACK, &sample.latitude, sizeof(sample.latitude), false);
+		///	Wait till the packet is sent
+		Ble_Uart_Wait_For_Transmission_End();
+
+		///	Increase the send bytes counter
+		byte_counter += sizeof(sample);
+		address += sizeof(sample);
+
+	}while((byte_counter < bytes_to_send_cnt) && !timeout_flag);
+
+	if(timeout_flag)
+	{
+		timeout_flag = 0;
+		RTC_Cancel_Timeout();
+		return ERROR_TIMEOUT;
+	}
+
+	return NRF_SUCCESS;
+
+}
+
 
 

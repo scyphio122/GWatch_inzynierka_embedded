@@ -41,6 +41,9 @@
 #include "libraries/memory_organization.h"
 #include "GPS.h"
 #include "libraries/scheduler.h"
+#include "fifo.h"
+
+
 
 /**@brief Buffer to hold data to send via TX. */
 static volatile bool		ble_tx_packet_in_progress = false;		/**< Mutex on single packet HVX transmission */
@@ -53,6 +56,11 @@ static volatile uint16_t	ble_uart_tx_data_size;					/**< Size of data which are 
 static uint8_t*				ble_data_ptr;							/**< Pointer where the data will be stored. It will be dynamically allocated buffer */
 ble_uart_t					m_ble_uart;
 static volatile uint8_t		ble_uart_data_dynamically_allocated;
+
+static app_fifo_t			ble_uart_argument_fifo;
+static uint8_t				ble_uart_arg_buffer[16];
+
+
 /**@brief Function for handling the Connect event.
  *
  * @param[in]   p_uart       Blood Pressure Service structure.
@@ -247,8 +255,6 @@ void ble_uart_on_ble_evt(ble_uart_t * p_uart, ble_evt_t * p_ble_evt)
     }
 }
 
-
-
 /**
  * \brief This function blocks program execution until the single BLE packet is transmitted
  */
@@ -305,7 +311,6 @@ uint32_t Ble_Uart_Wait_For_Transmission_End()
 	return NRF_SUCCESS;
 }
 
-
 /**
  * This function is called when the write event from central is generated. Depending on the central's request code the appropriate action is triggered
  *
@@ -348,6 +353,10 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_GET_HISTORY_TRACK:
 		{
+			for(uint8_t i=0; i<2; i++)
+				Fifo_Put(&ble_uart_argument_fifo, p_data[i+1]);
+
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_GET_AVAILABLE_TRACKS:
@@ -514,6 +523,14 @@ static uint32_t Ble_Uart_Send_Next_Packet(ble_uart_t* p_uart)
 	return err_code;
 }
 
+/**
+ *  \brief This function sends single packet (up to 20 bytes) of data with BLE with NOTIFY characteristic
+ *
+ *  \param p_uart - pointer to the uart service structure, which will be used to send data
+ *  \param data - pointer to the data buffer
+ *  \param data_size - size of data in the packet
+ *
+ */
 static uint32_t Ble_Uart_Notification_Single_Packet_Send(ble_uart_t* p_uart, uint8_t* data, uint8_t data_size)
 {
 	if(p_uart->conn_handle != BLE_CONN_HANDLE_INVALID)
@@ -565,6 +582,15 @@ static uint32_t Ble_Uart_Notification_Single_Packet_Send(ble_uart_t* p_uart, uin
 	return NRF_ERROR_INVALID_STATE;
 }
 
+/**
+ * \brief This function should be called after transmitting the last notify packet.
+ * 			If there is more data, this function sends another packet
+ *
+ * 			\param pointer to the uart service structure
+ *
+ * 			\return NRF_SUCCESS - if the packet was successfully send
+ * 					NRF_ERROR_INVALID_STATE - if the device is not in the BLE connection
+ */
 static uint32_t Ble_Uart_Notify_Send_Next_Packet(ble_uart_t* p_uart)
 {
 	uint32_t err_code = 0;
@@ -576,6 +602,15 @@ static uint32_t Ble_Uart_Notify_Send_Next_Packet(ble_uart_t* p_uart)
 	return err_code;
 }
 
+/**
+ * \brief This is the Notification Transmission API function - it should be used to notify some data to the central
+ *			NOTE: If the data size is longer than the single packet size, it divides the data into packets
+ *
+ * \param command_code - the code used to identificate the packet type
+ * \param data - pointer to the buffer with data to send
+ * \param actual_data_size - size of data to be sent
+ * \param data_buf_dynamically_allocated - true if the buffer needs to be freed after transmission
+ */
 uint32_t Ble_Uart_Notify_Central(uint8_t command_code, uint8_t* data, uint16_t actual_data_size, uint8_t data_buf_dynamically_allocated)
 {
 	bool notification_enabled = false;
@@ -861,6 +896,9 @@ uint32_t ble_uart_init(ble_uart_t * p_uart, const ble_uart_init_t * p_uart_init)
     uint32_t   err_code;
 	ble_uuid128_t base_uuid = GWATCH_UUID_BASE;
 
+	///	Initialize the fifo for arguments
+	Fifo_Init(&ble_uart_argument_fifo, ble_uart_arg_buffer, sizeof(ble_uart_arg_buffer));
+
     // Initialize service structure
     p_uart->evt_handler = p_uart_init->evt_handler;
     p_uart->conn_handle = BLE_CONN_HANDLE_INVALID;
@@ -968,7 +1006,11 @@ uint32_t ble_uart_is_notification_enabled(ble_uart_t * p_uart, bool * p_indicati
     return err_code;
 }
 
-
+/**
+ * \brief This function is called from the main context - it executes the ble requests if there were any
+ *
+ * \return	NRF_SUCCESS
+ */
 uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 {
 	uint8_t 	request_code = 0;
@@ -1034,13 +1076,41 @@ uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 				Ble_Uart_Data_Send(BLE_GET_GPS_POS_CMD, (uint8_t*)&gga_message.altitude, sizeof(gga_message.altitude) + sizeof(gga_message.altitude_unit), false);
 				Ble_Uart_Wait_For_Transmission_End();
 
-				RTC_Wait(RTC_MS_TO_TICKS(100));
 				break;
 			}
 			case BLE_GET_AVAILABLE_TRACKS:
 			{
-				Mem_Org_List_Tracks_Through_BLE();
+				uint32_t err_code = Mem_Org_List_Tracks_Through_BLE();
+				if(err_code != NRF_SUCCESS)
+				{
+					Ble_Uart_Data_Send(BLE_GET_AVAILABLE_TRACKS, &err_code, sizeof(err_code), false);
+					Ble_Uart_Wait_For_Transmission_End();
+				}
 				break;
+			}
+			case BLE_GET_HISTORY_TRACK:
+			{
+				uint32_t key = 0;
+				uint32_t track_number = 0;
+
+				///	Get the requested track number
+				for(uint8_t i=0; i < 2; i++)
+				{
+					uint8_t temp = 0;
+					Fifo_Get(&ble_uart_argument_fifo, &temp);
+					track_number |= temp << (i*8);
+				}
+
+				///	Find the key
+				uint32_t err_code = Mem_Org_Find_Key(track_number, &key);
+				if(err_code == NRF_SUCCESS)
+				{
+					err_code = Mem_Org_Send_Track_Via_BLE(key);
+				}
+
+				Ble_Uart_Data_Send(BLE_GET_HISTORY_TRACK, &err_code, sizeof(err_code), false);
+				Ble_Uart_Wait_For_Transmission_End();
+
 			}
 		}
 	}

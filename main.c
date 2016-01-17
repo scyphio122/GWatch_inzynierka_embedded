@@ -68,6 +68,8 @@ void Calculate_Battery_Level()
 
 int main()
 {
+	uint8_t sample_stored = 0;
+
 	BLE_Init();
 	NVIC_Config();
 
@@ -90,6 +92,7 @@ int main()
 
 
 	RTC_Set_Timestamp(1451606400);
+
 	while(1)
 	{
 
@@ -98,6 +101,11 @@ int main()
 			Mem_Org_Store_Sample(gps_sample_timestmap);
 			Ble_Uart_Data_Send(0xFF, NULL, 0, false);
 			gps_message_sample_storage_time = 0;
+			sample_stored = 1;
+		}
+		else
+		{
+			sample_stored = 0;
 		}
 
 		__WFE();
@@ -113,11 +121,10 @@ int main()
 			Display_Write_Longtitude();
 			Display_Update_GPS_Power_On();
 			Display_Update_Battery_Level();
-			Display_Update_Sampling_Status(mem_org_track_samples_storage_enabled);
+			Display_Update_Sampling_Status(sample_stored);
 
 			Display_Flush_Buffer();
 			disp_updt_time = 0;
-
 		}
 	}
 
