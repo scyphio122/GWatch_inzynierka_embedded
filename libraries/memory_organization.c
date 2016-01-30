@@ -311,7 +311,7 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 
 	///	If the sample would be stored in between flash pages than go to the next flash page
 	if(mem_org_next_free_data_sample_address + sizeof(sample) >= (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE) + INTERNAL_FLASH_PAGE_SIZE))
-			mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE) + INTERNAL_FLASH_PAGE_SIZE) + sizeof(sample);
+			mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % INTERNAL_FLASH_PAGE_SIZE) + INTERNAL_FLASH_PAGE_SIZE) + sizeof(mem_org_flash_page_header_t);
 
 	///	If no more memory is available - stop sampling and return error
 	if(mem_org_next_free_data_sample_address + sizeof(sample) >= MEM_ORG_DATA_AREA_END_ADDRESS)

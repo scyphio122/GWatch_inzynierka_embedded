@@ -25,7 +25,7 @@ uint32_t					gps_sample_nr;
 uint32_t					gps_sample_timestmap;
 volatile uint8_t			gps_message_sample_storage_time;
 uint32_t					gps_distance_meters;
-
+char						gps_distance[9];
 
 /**
  * This function initializes the GPS pins
@@ -425,4 +425,5 @@ uint32_t GPS_Prepare_To_Sampling_Start()
 
 	return NRF_SUCCESS;
 }
+
 

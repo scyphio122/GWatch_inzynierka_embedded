@@ -283,7 +283,7 @@ void Display_Write_Longtitude()
 		memcpy(text, gga_message.longtitude.deg, 3);
 		memcpy(text + 4, gga_message.longtitude.min_int, 2);
 		memcpy(text + 7, gga_message.longtitude.min_fract, 4);
-		long_indi = gga_message.latitude_indi;
+		long_indi = gga_message.longtitude_indi;
 	}
 
 	Display_Write_Buffer(&"LONGTITUDE:", 11, DISPLAY_LONGTITUDE_DESC_START_LINE, 0, true);

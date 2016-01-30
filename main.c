@@ -23,7 +23,7 @@
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-static uint8_t 	bat_voltage;
+static uint8_t 	bat_voltage = 100;
 uint8_t 		battery_level;
 
 //#define NO_BLE
@@ -57,6 +57,7 @@ void Periph_Config()
 	Timer1_Init();
 	ADC_Init();
 	RTC_Schedule_IRQ(RTC_US_TO_TICKS(1000000), &NRF_RTC1->CC[2]);
+	Ext_Flash_Init();
 }
 
 void Calculate_Battery_Level()
@@ -75,7 +76,7 @@ int main()
 
 	Periph_Config();
 	Advertising_Init();
-	Ext_Flash_Init();
+
 	Scheduler_Init();
 	Mem_Org_Init();
 
@@ -95,7 +96,7 @@ int main()
 
 	while(1)
 	{
-
+		__WFE();
 		if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gga_message.fix_indi != '0') && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))
 		{
 			Mem_Org_Store_Sample(gps_sample_timestmap);
@@ -108,13 +109,12 @@ int main()
 			sample_stored = 0;
 		}
 
-		__WFE();
 		Ble_Uart_Execute_Ble_Requests_If_Available();
 
 		if(disp_updt_time)
 		{
-			ADC_Get_Bat_Voltage(&bat_voltage);
-			Calculate_Battery_Level();
+//			ADC_Get_Bat_Voltage(&bat_voltage);
+//			Calculate_Battery_Level();
 
 			Display_Write_Time();
 			Display_Write_Latitude();

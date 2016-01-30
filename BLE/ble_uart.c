@@ -333,13 +333,15 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_INDICATE_GPS_FIX:
 		{
-			Ble_Uart_Data_Send(BLE_INDICATE_GPS_FIX, &gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
+//			Ble_Uart_Data_Send(BLE_INDICATE_GPS_FIX, &gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
 			break;
 		}
 		case BLE_TIMESTAMP_GET_CMD:
 		{
-			uint32_t timestamp = RTC_Get_Timestamp();
-			Ble_Uart_Data_Send(BLE_TIMESTAMP_GET_CMD, (uint8_t*)&timestamp, sizeof(timestamp), false);
+//			uint32_t timestamp = RTC_Get_Timestamp();
+//			Ble_Uart_Data_Send(BLE_TIMESTAMP_GET_CMD, (uint8_t*)&timestamp, sizeof(timestamp), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_GET_GPS_POS_CMD:
@@ -376,7 +378,8 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		}
 		case BLE_GET_SATTELITES_USED:
 		{
-			Ble_Uart_Data_Send(BLE_GET_SATTELITES_USED, &gga_message.sats_used, sizeof(gga_message.sats_used), false);
+//			Ble_Uart_Data_Send(BLE_GET_SATTELITES_USED, &gga_message.sats_used, sizeof(gga_message.sats_used), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 		case BLE_CLEAR_TRACK_MEMORY:
@@ -388,29 +391,23 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 		{
 			break;
 		}
-		case BLE_TRANSMISSION_TEST:
-		{
-			const uint8_t text[] = "Natenczas Wojski chwyci³ na taœmie przypiêty Swoj rog bawoli, dlugi, cetkowany, krety\n\rJak waz boa, oburacz do ust go przycisnal,\n\rWzdal policzki jak banie, w oczach krwia zablysnal,\n\rZasunal wpol powieki, wci¹gnal w glab pol brzucha\n\rI do pluc wyslal z niego caly zapas ducha,\n\rI zagral: rog jak wicher, wirowatym dechem\n\rNiesie w puszcze muzyke i podwaja echem.\n\rUmilkli strzelcy, stali szczwacze zadziwieni\n\rMoca, czystoscia, dziwna harmonija pieni.\n\rStarzec caly kunszt, ktorym niegdys w lasach slynal,\n\rJeszcze raz przed uszami mysliwcow rozwinal;\n\rNapelnil wnet, ozywil knieje i dabrowy,\n\rJakby psiarniê w nie wpuscil i rozpocz¹l lowy.\n\rBo w graniu byla lowow historyja krotka:\n\rrazu odzew dzwiêcz¹cy, rzeski: to pobudka;\n\rPotem jeki po jekach skomla: to psow granie;\n\rA gdzieniegdzie ton twardszy jak grzmot: to strzelanie...\n\r";
-			uint8_t* test_data = malloc(sizeof(text));
-			memcpy(test_data, text, sizeof(text));
-			//Ble_Uart_Data_Send(8, test_data, sizeof(text));
-			Ble_Uart_Notify_Central(8, test_data, sizeof(text), true);
-			//Ble_Uart_Wait_Till_Transmission_In_Progress();
-			//RTC_Wait(1);
-			break;
-		}
-
 		case BLE_GPS_ON:
 		{
-			GPS_Turn_On();
+//			GPS_Turn_On();
+//			Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
 
 		case BLE_GPS_OFF:
 		{
-			GPS_Turn_Off();
+//			GPS_Turn_Off();
+//			Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
+			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
+		default:
+			break;
 	}
 
 	return NRF_SUCCESS;
@@ -1011,6 +1008,7 @@ uint32_t ble_uart_is_notification_enabled(ble_uart_t * p_uart, bool * p_indicati
  *
  * \return	NRF_SUCCESS
  */
+__attribute__((optimize("O2")))
 uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 {
 	uint8_t 	request_code = 0;
@@ -1110,8 +1108,44 @@ uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 
 				Ble_Uart_Data_Send(BLE_GET_HISTORY_TRACK, &err_code, sizeof(err_code), false);
 				Ble_Uart_Wait_For_Transmission_End();
-
+				break;
 			}
+			case BLE_GET_SATTELITES_USED:
+			{
+				Ble_Uart_Data_Send(BLE_GET_SATTELITES_USED, &gga_message.sats_used, sizeof(gga_message.sats_used), false);
+				Ble_Uart_Wait_For_Transmission_End();
+				break;
+			}
+			case BLE_TIMESTAMP_GET_CMD:
+			{
+				uint32_t timestamp = RTC_Get_Timestamp();
+				Ble_Uart_Data_Send(BLE_TIMESTAMP_GET_CMD, (uint8_t*)&timestamp, sizeof(timestamp), false);
+				Ble_Uart_Wait_For_Transmission_End();
+				break;
+			}
+			case BLE_INDICATE_GPS_FIX:
+			{
+//				Scheduler_Schedule_Task(&ble_task_fifo, request_code);
+				Ble_Uart_Data_Send(BLE_INDICATE_GPS_FIX, &gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
+				Ble_Uart_Wait_For_Transmission_End();
+				break;
+			}
+			case BLE_GPS_ON:
+			{
+				GPS_Turn_On();
+				Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
+				Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
+				break;
+			}
+			case BLE_GPS_OFF:
+			{
+				GPS_Turn_Off();
+				Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
+				Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
+				break;
+			}
+			default:
+				break;
 		}
 	}
 	return NRF_SUCCESS;
