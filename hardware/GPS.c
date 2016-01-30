@@ -73,6 +73,7 @@ inline void GPS_Turn_Off()
 	UART_Disable();
 	NRF_GPIO->OUTSET = 1 << GPS_ON_PIN;
 	gps_is_powered_on = 0;
+	memset(&gga_message, 0 , sizeof(gga_message));
 }
 
 

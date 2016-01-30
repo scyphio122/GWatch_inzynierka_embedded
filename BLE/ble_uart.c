@@ -1133,15 +1133,11 @@ uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 			case BLE_GPS_ON:
 			{
 				GPS_Turn_On();
-				Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
-				Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
 				break;
 			}
 			case BLE_GPS_OFF:
 			{
 				GPS_Turn_Off();
-				Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
-				Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
 				break;
 			}
 			default:
