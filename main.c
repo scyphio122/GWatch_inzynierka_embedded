@@ -20,6 +20,8 @@
 #include "libraries/scheduler.h"
 #include "timer.h"
 #include "adc.h"
+#include "hardware_settings.h"
+#include "nrf_gpio.h"
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -58,7 +60,12 @@ void Periph_Config()
 	ADC_Init();
 	RTC_Schedule_IRQ(RTC_US_TO_TICKS(1000000), &NRF_RTC1->CC[2]);
 	Ext_Flash_Init();
-}
+
+	nrf_gpio_cfg_output(ACCELER_MAG_ON_PIN);
+	NRF_GPIO->OUTSET = 1 << ACCELER_MAG_ON_PIN;
+	nrf_gpio_cfg_output(ACCELER_CS_PIN);
+	NRF_GPIO->OUTSET = 1 << ACCELER_CS_PIN;
+	}
 
 void Calculate_Battery_Level()
 {
@@ -79,7 +86,6 @@ int main()
 
 	Scheduler_Init();
 	Mem_Org_Init();
-
 
 
 	//Display_Test();

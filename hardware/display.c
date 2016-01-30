@@ -306,7 +306,6 @@ void Display_Update_BLE_Conn(uint16_t ble_conn_status)
 		data = ' ';
 	}
 	Display_Write_Buffer(&data, 1, 1, 0, true);
-	return data;
 }
 
 /**

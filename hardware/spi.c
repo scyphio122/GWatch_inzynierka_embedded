@@ -283,10 +283,10 @@ uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI, unsigned char* data_to_send, u
 	///	Clear (assert) the Chip Select
 	SPI_Assert_CS(cs_pin);
 
-	spi_transfer_ongoing_flag = 1;
+	spi_0_transfer_ongoing_flag = 1;
 	SPI_Execute_Transaction(SPI);
 
-	spi_transfer_ongoing_flag = 0;
+	spi_0_transfer_ongoing_flag = 0;
 	///	Deassert (set in high state) CS pin
 	SPI_Deassert_CS(cs_pin);
 
