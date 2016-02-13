@@ -107,6 +107,11 @@ inline void RTC_Schedule_IRQ(uint32_t ticks, uint32_t* cc_register)
 	*cc_register = ticks;
 }
 
+/**
+ * \brief This function waits for the specified amount of time
+ *
+ * \param time - time to wait in RTC ticks
+ */
 void RTC_Wait(uint32_t time)
 {
 	// Zero-lenght delay will cause program hang!
@@ -128,6 +133,11 @@ void RTC_Wait(uint32_t time)
     wait_flag = 0;
 }
 
+/**
+ * \brief This function starts the timeout measurement
+ *
+ * \param time - time of th eitmeout in the RTC ticks
+ */
 void RTC_Timeout(uint32_t time)
 {
 	if(NRF_RTC1->INTENSET & RTC_INTENSET_COMPARE1_Msk) /// return if timeout already started
@@ -138,6 +148,10 @@ void RTC_Timeout(uint32_t time)
 	NRF_RTC1->CC[1] = (NRF_RTC1->COUNTER + time);
 	NRF_RTC1->INTENSET |= RTC_INTENSET_COMPARE1_Msk;
 }
+
+/**
+ * \brief This function cancels the started timeout
+ */
 inline void RTC_Cancel_Timeout()
 {
 	NRF_RTC1->INTENCLR = RTC_INTENCLR_COMPARE1_Msk;

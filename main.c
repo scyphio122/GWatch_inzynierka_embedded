@@ -126,7 +126,7 @@ int main()
 			Display_Write_Latitude();
 			Display_Write_Longtitude();
 			Display_Update_GPS_Power_On();
-			Display_Update_Battery_Level();
+//			Display_Update_Battery_Level();
 			Display_Update_Sampling_Status(sample_stored);
 
 			Display_Flush_Buffer();

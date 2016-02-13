@@ -24,7 +24,7 @@ static uint32_t 	    mem_org_next_free_data_sample_address = MEM_ORG_DATA_AREA_S
 static uint16_t			mem_org_tracks_stored = 0;
 volatile uint8_t		mem_org_track_samples_storage_enabled = 0;
 static uint16_t         mem_org_track_size;
-uint8_t 				mem_org_gps_sample_storage_interval = 15;
+uint32_t 				mem_org_gps_sample_storage_interval = 15;
 /**
  * \brief This function finds the first free key address pn the page (if existing)
  *
@@ -373,9 +373,7 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 	///	Copy the longtitude
 	memcpy(sample.longtitude, &gga_message.longtitude, 10);
 
-	///	If the sample would be stored in between flash pages than go to the next flash page
-	if(mem_org_next_free_data_sample_address + sizeof(sample) >= (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % flash_page_size) + flash_page_size))
-			mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % flash_page_size) + flash_page_size) + sizeof(mem_org_flash_page_header_t);
+
 
 	///	If no more memory is available - stop sampling and return error
 	if(mem_org_next_free_data_sample_address + sizeof(sample) >= MEM_ORG_DATA_AREA_END_ADDRESS)
@@ -399,6 +397,11 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 	}
 #else
 		err_code = Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(mem_org_next_free_data_sample_address, &sample, sizeof(sample));
+
+		mem_org_next_free_data_sample_address += sizeof(sample);
+		///	If the sample would be stored in between flash pages than go to the next flash page
+		if(mem_org_next_free_data_sample_address + sizeof(sample) >= (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % flash_page_size) + flash_page_size))
+				mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % flash_page_size) + flash_page_size) + sizeof(mem_org_flash_page_header_t);
 #endif
 	mem_org_track_size += sizeof(sample);
 

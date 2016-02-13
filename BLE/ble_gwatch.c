@@ -268,7 +268,9 @@ static void ble_stack_init()
     APP_ERROR_CHECK(err_code);
 }
 
-
+/**
+ * \brief This functino initializes the Advertising module. It sets the ADV_INTERVAL
+ */
 void Advertising_Init(void)
 {
 	uint32_t      err_code;
@@ -291,6 +293,10 @@ void Advertising_Init(void)
 		APP_ERROR_CHECK(err_code);
 }
 
+/**
+ * \brief This function starts advertising
+ */
+
 void Advertising_Start()
 {
 	uint32_t err_code = 0;//sd_ble_gap_adv_data_set(NULL, 0,NULL, 0);
@@ -306,6 +312,10 @@ void Advertising_Start()
 	}
 }
 
+
+/**
+ * \brief This function initializes entire BLE module
+ */
 void BLE_Init()
 {
 	ble_stack_init();

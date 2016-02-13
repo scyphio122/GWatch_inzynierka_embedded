@@ -406,6 +406,11 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
+		case BLE_SET_STORAGE_INTERVAL:
+		{
+			memcpy(&mem_org_gps_sample_storage_interval, &p_data[1], sizeof(uint32_t));
+			break;
+		}
 		default:
 			break;
 	}

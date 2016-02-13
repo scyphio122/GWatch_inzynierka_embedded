@@ -60,7 +60,7 @@ typedef struct
 
 
 extern volatile uint8_t		mem_org_track_samples_storage_enabled;
-extern uint8_t 				mem_org_gps_sample_storage_interval;
+extern uint32_t 				mem_org_gps_sample_storage_interval;
 
 uint32_t Mem_Org_Init();
 uint32_t Mem_Org_Store_Key(uint32_t address_to_data, uint16_t track_number);
