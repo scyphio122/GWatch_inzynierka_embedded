@@ -242,21 +242,21 @@ uint32_t Mem_Org_Store_Key(uint32_t address_to_data, uint16_t track_number)
 		uint16_t flash_page_size = INTERNAL_FLASH_PAGE_SIZE;
 		///	Store the key
 		err_code = Int_Flash_Store_Dword(key, (uint32_t*)mem_org_next_free_key_address);
+		if(err_code == FLASH_OP_SUCCESS)
+		{
 #else
 		uint16_t flash_page_size = EXT_FLASH_PAGE_SIZE;
 		err_code = Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(mem_org_next_free_key_address, &key, sizeof(key));
-#endif
-		if(err_code == FLASH_OP_SUCCESS)
+		if(err_code == NRF_SUCCESS)
 		{
+#endif
+			uint32_t temp = key & (uint32_t)0x7FFFFFFF;
 			///	Clear the MSB
-			key = key & 0x7FFFFFFF;
+			key = temp;
 			///	Acknowledge the key
 #ifndef 	EXT_FLASH_AVAILABLE
 			///	Store the key
 			err_code = Int_Flash_Store_Dword(key, (uint32_t*)mem_org_next_free_key_address);
-#else
-			err_code = Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(mem_org_next_free_key_address, &key, sizeof(key));
-#endif
 			if(err_code == FLASH_OP_SUCCESS)
 			{
 				///	Increase the pointer to the next free address
@@ -266,6 +266,18 @@ uint32_t Mem_Org_Store_Key(uint32_t address_to_data, uint16_t track_number)
 					mem_org_next_free_key_address += sizeof(mem_org_flash_page_header_t);
 				return NRF_SUCCESS;
 			}
+#else
+			err_code = Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(mem_org_next_free_key_address, &key, sizeof(key));
+			if(err_code == NRF_SUCCESS)
+			{
+				///	Increase the pointer to the next free address
+				mem_org_next_free_key_address += 4;
+				///	If we get to the next page start then set the pointer to the first address after the header
+				if(mem_org_next_free_key_address % flash_page_size == 0)
+					mem_org_next_free_key_address += sizeof(mem_org_flash_page_header_t);
+				return NRF_SUCCESS;
+			}
+#endif
 		}
 		else
 		{
@@ -295,6 +307,9 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 	uint32_t key = 0;
 	uint16_t key_index = 0;
 
+#ifdef EXT_FLASH_AVAILABLE
+	Ext_Flash_Turn_On(EXT_FLASH_READ_OP);
+#endif
 
 	RTC_Timeout(RTC_S_TO_TICKS(2));
 	do
@@ -305,10 +320,16 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 		memcpy(&key, MEM_ORG_KEY_AREA_START_ADDRESS + page_number*INTERNAL_FLASH_PAGE_SIZE + sizeof(mem_org_flash_page_header_t) + key_on_page*sizeof(uint32_t), sizeof(uint32_t));
 #else
 		uint16_t flash_page_size = EXT_FLASH_PAGE_SIZE;
-		Ext_Flash_Read_Page(MEM_ORG_KEY_AREA_START_ADDRESS + page_number*flash_page_size + sizeof(mem_org_flash_page_header_t) + key_on_page*sizeof(uint32_t), &key, sizeof(uint32_t));
+		uint32_t add = MEM_ORG_KEY_AREA_START_ADDRESS + page_number*flash_page_size + sizeof(mem_org_flash_page_header_t) + key_on_page*sizeof(uint32_t);
+		Ext_Flash_Read_Page(add, &key, sizeof(uint32_t));
 #endif
 		if(key == 0xFFFFFFFF)
+		{
+#ifdef EXT_FLASH_AVAILABLE
+			Ext_Flash_Turn_Off();
+#endif
 			return NRF_ERROR_NOT_FOUND;
+		}
 
 		key_index = ((key >> MEM_ORG_KEY_TRACK_NUMBER_SHIFT) & 0x7FFF);
 		///	If it is the requested key
@@ -319,6 +340,9 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 			{
 				*key_buf = key;
 				RTC_Cancel_Timeout();
+#ifdef EXT_FLASH_AVAILABLE
+				Ext_Flash_Turn_Off();
+#endif
 				return NRF_SUCCESS;
 			}
 			else
@@ -342,6 +366,9 @@ uint32_t Mem_Org_Find_Key(uint16_t track_number, uint32_t* key_buf)
 	timeout_flag = 0;
 	RTC_Cancel_Timeout();
 
+#ifdef EXT_FLASH_AVAILABLE
+	Ext_Flash_Turn_Off();
+#endif
 	return NRF_ERROR_INTERNAL;
 }
 
@@ -396,12 +423,17 @@ uint32_t Mem_Org_Store_Sample(uint32_t timestamp)
 		mem_org_next_free_data_sample_address += 4;
 	}
 #else
+		if(mem_org_next_free_data_sample_address % flash_page_size == 0)
+			mem_org_next_free_data_sample_address += sizeof(mem_org_flash_page_header_t);
+
+
 		err_code = Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(mem_org_next_free_data_sample_address, &sample, sizeof(sample));
 
 		mem_org_next_free_data_sample_address += sizeof(sample);
 		///	If the sample would be stored in between flash pages than go to the next flash page
 		if(mem_org_next_free_data_sample_address + sizeof(sample) >= (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % flash_page_size) + flash_page_size))
-				mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % flash_page_size) + flash_page_size) + sizeof(mem_org_flash_page_header_t);
+			mem_org_next_free_data_sample_address = (mem_org_next_free_data_sample_address - (mem_org_next_free_data_sample_address % flash_page_size) + flash_page_size) + sizeof(mem_org_flash_page_header_t);
+
 #endif
 	mem_org_track_size += sizeof(sample);
 
@@ -484,9 +516,12 @@ KEY_AREA_START_ADDRESS; i<MEM_ORG_KEY_AREA_END_ADDRESS; i += INTERNAL_FLASH_PAGE
 
 	sd_nvic_EnableIRQ(UART0_IRQn);
 #else
+	sd_nvic_DisableIRQ(UART0_IRQn);
 	Ext_Flash_Turn_On(EXT_FLASH_ERASE_OP);
 	Ext_Flash_Erase_Chip();
 	Ext_Flash_Turn_Off();
+	mem_org_tracks_stored = 0;
+	sd_nvic_EnableIRQ(UART0_IRQn);
 #endif
 	return NRF_SUCCESS;
 }
@@ -545,7 +580,6 @@ uint32_t Mem_Org_List_Tracks_Through_BLE()
 #else
 				Ext_Flash_Read_Page(encoded_address + sizeof(mem_org_flash_page_header_t), &data_buffer[1], sizeof(uint32_t));
 #endif
-
 				///	Send the track number and track timestamp
 				Ble_Uart_Data_Send(BLE_GET_AVAILABLE_TRACKS, data_buffer, sizeof(data_buffer), false);
 				Ble_Uart_Wait_For_Transmission_End();

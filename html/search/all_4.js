@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['dab',['DAB',['../struct_n_r_f___r_a_d_i_o___type.html#aacd3ca05a0341b964916a15d5ec23382',1,'NRF_RADIO_Type']]],
+  ['dacnf',['DACNF',['../struct_n_r_f___r_a_d_i_o___type.html#a0689314a66b480c89b5102c3d7558a5f',1,'NRF_RADIO_Type']]],
+  ['dai',['DAI',['../struct_n_r_f___r_a_d_i_o___type.html#ac42028d8bebc4a1bda73171306f3645e',1,'NRF_RADIO_Type']]],
+  ['dap',['DAP',['../struct_n_r_f___r_a_d_i_o___type.html#a71e30b6bc99e2f5f716a1c52faf859d5',1,'NRF_RADIO_Type']]],
+  ['datawhiteiv',['DATAWHITEIV',['../struct_n_r_f___r_a_d_i_o___type.html#a19647347715a11d0e4dfe208a1a4fa18',1,'NRF_RADIO_Type']]],
+  ['date_5ft',['date_t',['../structdate__t.html',1,'']]],
+  ['dbfen',['DBFEN',['../struct_n_r_f___q_d_e_c___type.html#a38ba26b0b350c0e1bfe7407e7206a250',1,'NRF_QDEC_Type']]],
+  ['dcdcen',['DCDCEN',['../struct_n_r_f___p_o_w_e_r___type.html#a5b0a7e0a02a6912516584852231bef41',1,'NRF_POWER_Type']]],
+  ['dcdcforce',['DCDCFORCE',['../struct_n_r_f___p_o_w_e_r___type.html#aa4e6685e8c7674cbc4aae005dfb92217',1,'NRF_POWER_Type']]],
+  ['debugmonitor_5firqn',['DebugMonitor_IRQn',['../group__n_r_f51.html#gga7e1129cd8a196f4284d41db3e82ad5c8a8e033fcef7aed98a31c60a7de206722c',1,'nrf51.h']]],
+  ['def',['DEF',['../struct_n_r_f___s_p_i_s___type.html#ad04af03c7cf95dd2e789d87e4aba573f',1,'NRF_SPIS_Type']]],
+  ['device_5fperipheral_5fregisters',['Device_Peripheral_Registers',['../group___device___peripheral___registers.html',1,'']]],
+  ['deviceaddr',['DEVICEADDR',['../struct_n_r_f___f_i_c_r___type.html#a7bfb2fbde6d426c6bb411d9c0c0d3567',1,'NRF_FICR_Type']]],
+  ['deviceaddrtype',['DEVICEADDRTYPE',['../struct_n_r_f___f_i_c_r___type.html#a2414378f6311866cc2c13dc36e385f43',1,'NRF_FICR_Type']]],
+  ['deviceid',['DEVICEID',['../struct_n_r_f___f_i_c_r___type.html#a86a505791377ca6b4c050f5fd3d8355d',1,'NRF_FICR_Type']]],
+  ['dir',['DIR',['../struct_n_r_f___g_p_i_o___type.html#a764e29ee686c3f5d869b115a6a54830f',1,'NRF_GPIO_Type']]],
+  ['dirclr',['DIRCLR',['../struct_n_r_f___g_p_i_o___type.html#ad112d0855e109acaa63d6a3f1622f1d8',1,'NRF_GPIO_Type']]],
+  ['dirset',['DIRSET',['../struct_n_r_f___g_p_i_o___type.html#ad081475a143678bc52e62834f758ea56',1,'NRF_GPIO_Type']]],
+  ['dis',['DIS',['../struct_p_p_i___t_a_s_k_s___c_h_g___type.html#a6197e7d3395fd93e920150ad965ff7d3',1,'PPI_TASKS_CHG_Type']]],
+  ['disableindebug',['DISABLEINDEBUG',['../struct_n_r_f___m_p_u___type.html#a00763558c0e6ace69d8337979661da29',1,'NRF_MPU_Type']]]
+];

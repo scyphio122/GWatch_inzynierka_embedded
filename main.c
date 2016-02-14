@@ -87,23 +87,29 @@ int main()
 	Scheduler_Init();
 	Mem_Org_Init();
 
-
-	//Display_Test();
-
-
 #ifndef NO_BLE
 	Advertising_Start();
 #endif
 
-	//GPS_Turn_On();
-
-
 	RTC_Set_Timestamp(1451606400);
+
+//	Mem_Org_Clear_Tracks_Memory();
+//	Mem_Org_Init();
+//	uint8_t buf[256] = {0};
+//	Mem_Org_Track_Start_Storage();
+//	Mem_Org_Store_Sample(0);
+//	Mem_Org_Store_Sample(128);
+//	Mem_Org_Store_Sample(255);
+//	Ext_Flash_Turn_On(EXT_FLASH_ERASE_OP);
+//	Ext_Flash_Read_Page(0x2000, buf, 256);
+//	Ext_Flash_Turn_Off();
+//	Mem_Org_Track_Stop_Storage();
+//	Mem_Org_List_Tracks_Through_BLE();
 
 	while(1)
 	{
 		__WFE();
-		if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gga_message.fix_indi != '0') && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))
+		if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))//if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gga_message.fix_indi != '0') && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))
 		{
 			Mem_Org_Store_Sample(gps_sample_timestmap);
 			Ble_Uart_Data_Send(0xFF, NULL, 0, false);

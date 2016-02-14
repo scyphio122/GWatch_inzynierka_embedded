@@ -136,7 +136,7 @@ static uint32_t Ext_Flash_Wait_Till_Ready()
 	do
 	{
 		Ext_Flash_Read_Status_Reg();
-		RTC_Wait(RTC_US_TO_TICKS(62));
+		RTC_Wait(RTC_MS_TO_TICKS(1));
 	}while(ext_flash_status_reg.ready_or_busy != 1);
 
 	return NRF_SUCCESS;
@@ -233,8 +233,8 @@ uint32_t Ext_Flash_Program_Page_With_Preerase(ext_flash_buffer_number_e buf_numb
 	else
 		addr[0] = EXT_FLASH_PAGE_PROG_FROM_BUF_W_PREERASE_BUF_2;
 
-	addr[1] = (uint8_t)address >> 16;
-	addr[2] = (uint8_t)address >> 8;
+	addr[1] = (uint8_t)(address >> 16);
+	addr[2] = (uint8_t)(address >> 8);
 	addr[3] = (uint8_t)address;
 
 
@@ -278,8 +278,8 @@ uint32_t Ext_Flash_Program_Page_Without_Preerase(ext_flash_buffer_number_e buf_n
 	else
 		addr[0] = EXT_FLASH_PAGE_PROG_FROM_BUF_WITHOUT_PREERASE_BUF_2;
 
-	addr[1] = (uint8_t)address >> 16;
-	addr[2] = (uint8_t)address >> 8;
+	addr[1] = (uint8_t)(address >> 16);
+	addr[2] = (uint8_t)(address >> 8);
 	addr[3] = (uint8_t)address;
 
 	///	Start programming the page
@@ -319,8 +319,8 @@ uint32_t Ext_Flash_Program_Page_Through_Buffer_W_Preerase(ext_flash_buffer_numbe
 		data_ptr[0] = EXT_FLASH_PAGE_PROG_THROUGH_BUF_W_PRERASE_BUF_2;
 
 	///	Set the address
-	data_ptr[1] = (uint8_t)address >> 16;
-	data_ptr[2] = (uint8_t)address >> 8;
+	data_ptr[1] = (uint8_t)(address >> 16);
+	data_ptr[2] = (uint8_t)(address >> 8);
 	data_ptr[3] = (uint8_t)address;
 
 	///	Copy the data
@@ -362,8 +362,8 @@ uint32_t Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(uint32_t address
 	data_ptr[0] = EXT_FLASH_PAGE_PROG_THROUGH_BUF_WITHOUT_PRERASE_BUF_1;
 
 	///	Set the address
-	data_ptr[1] = (uint8_t)address >> 16;
-	data_ptr[2] = (uint8_t)address >> 8;
+	data_ptr[1] = (uint8_t)(address >> 16);
+	data_ptr[2] = (uint8_t)(address >> 8);
 	data_ptr[3] = (uint8_t)address;
 
 	///	Copy the data
@@ -408,8 +408,8 @@ uint32_t Ext_Flash_Update_Data_On_Page(ext_flash_buffer_number_e buf_number, uin
 		data_ptr[0] = EXT_FLASH_PAGE_UPDATE_BUF_2;
 
 	///	Set the address
-	data_ptr[1] = (uint8_t)address >> 16;
-	data_ptr[2] = (uint8_t)address >> 8;
+	data_ptr[1] = (uint8_t)(address >> 16);
+	data_ptr[2] = (uint8_t)(address >> 8);
 	data_ptr[3] = (uint8_t)address;
 
 	///	Copy the data
@@ -438,6 +438,7 @@ uint32_t Ext_Flash_Update_Data_On_Page(ext_flash_buffer_number_e buf_number, uin
 //__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Erase_Chip()
 {
+	uint32_t start_timestamp = RTC_Get_Timestamp();
 	uint32_t command = EXT_FLASH_ERASE_CHIP;
 
 	///	Wait until the flash module is ready
@@ -447,6 +448,7 @@ uint32_t Ext_Flash_Erase_Chip()
 
 	///	Wait until the flash module is ready
 	Ext_Flash_Wait_Till_Ready();
+	uint32_t end_time = RTC_Get_Timestamp();
 	///	Check if there was an error
 	uint32_t err_code = Ext_Flash_Check_Program_Erase_Error();
 
@@ -475,8 +477,8 @@ uint32_t Ext_Flash_Erase_Sector(ext_flash_sector_numbers_e sector_number)
 		sector_num = ((uint32_t)sector_number) << 18;
 
 	spi_command[0] = EXT_FLASH_ERASE_SECTOR;
-	spi_command[1] = (uint8_t)sector_num >> 16;
-	spi_command[2] = (uint8_t)sector_num >> 8;
+	spi_command[1] = (uint8_t)(sector_num >> 16);
+	spi_command[2] = (uint8_t)(sector_num >> 8);
 	spi_command[3] = (uint8_t)sector_num;
 
 	///	Wait until the flash module is ready
@@ -507,9 +509,9 @@ uint32_t Ext_Flash_Erase_Block(uint16_t block_number)
 	uint32_t spi_message = block_number << 11;
 
 	spi_command[0] = EXT_FLASH_ERASE_BLOCK_8_PAGES;
-	spi_command[1] = (uint8_t)spi_message >> 16;
-	spi_command[2] = (uint8_t)spi_message >> 8;
-	spi_command[3] = (uint8_t)spi_message;
+	spi_command[1] = (uint8_t)(spi_message >> 16);
+	spi_command[2] = (uint8_t)(spi_message >> 8);
+	spi_command[3] = (uint8_t)(spi_message);
 
 	///	Wait until the flash module is ready
 	Ext_Flash_Wait_Till_Ready();
@@ -540,8 +542,8 @@ uint32_t Ext_Flash_Erase_Page(uint32_t address)
 
 	address = address - (address%256) + 1;
 	spi_command[0] = EXT_FLASH_ERASE_PAGE;
-	spi_command[1] = (uint8_t)address >> 16;
-	spi_command[2] = (uint8_t)address >> 8;
+	spi_command[1] = (uint8_t)(address >> 16);
+	spi_command[2] = (uint8_t)(address >> 8);
 	spi_command[3] = (uint8_t)address;
 
 	///	Wait until the flash module is ready
@@ -579,8 +581,8 @@ uint32_t Ext_Flash_Read_Page(uint32_t address, uint8_t* data_buf, uint16_t data_
 	uint8_t spi_command[8] = {0};
 
 	spi_command[0] = EXT_FLASH_READ_PAGE;
-	spi_command[1] = (uint8_t)address >> 16;
-	spi_command[2] = (uint8_t)address >> 8;
+	spi_command[1] = (uint8_t)(address >> 16);
+	spi_command[2] = (uint8_t)(address >> 8);
 	spi_command[3] = (uint8_t)address;
 
 	///	Wait until the flash module is ready
@@ -607,8 +609,8 @@ uint32_t Ext_Flash_Read_Continuous(uint32_t address, uint8_t* data_buf, uint16_t
 	uint8_t spi_command[8] = {0};
 
 	spi_command[0] = EXT_FLASH_CONTINUOUS_READ;
-	spi_command[1] = (uint8_t)address >> 16;
-	spi_command[2] = (uint8_t)address >> 8;
+	spi_command[1] = (uint8_t)(address >> 16);
+	spi_command[2] = (uint8_t)(address >> 8);
 	spi_command[3] = (uint8_t)address;
 
 	///	Wait until the flash module is ready

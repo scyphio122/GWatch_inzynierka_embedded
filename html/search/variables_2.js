@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['cc',['CC',['../struct_n_r_f___t_i_m_e_r___type.html#a5b7630a14416703357d7979bb84063d2',1,'NRF_TIMER_Type::CC()'],['../struct_n_r_f___r_t_c___type.html#af9538d88324a98c038e6869358d92f6b',1,'NRF_RTC_Type::CC()']]],
+  ['ccm',['CCM',['../struct_a_m_l_i___r_a_m_p_r_i___type.html#ad1919e101695c6e9e8de0ded7fa51ff4',1,'AMLI_RAMPRI_Type']]],
+  ['cd',['CD',['../struct_n_r_f___r_a_d_i_o___type.html#a347a2dd45280b00d6ca6602c050f0e05',1,'NRF_RADIO_Type']]],
+  ['ch',['CH',['../struct_n_r_f___p_p_i___type.html#ab7c91bb1064e971a19241565d10faf2c',1,'NRF_PPI_Type']]],
+  ['chen',['CHEN',['../struct_n_r_f___p_p_i___type.html#a592334d1718038cea99b96c44ff804d6',1,'NRF_PPI_Type']]],
+  ['chenclr',['CHENCLR',['../struct_n_r_f___p_p_i___type.html#a2406f118ccab3f9c493a3c70445a97dc',1,'NRF_PPI_Type']]],
+  ['chenset',['CHENSET',['../struct_n_r_f___p_p_i___type.html#a6b36decd8a32c616b73b51681e6e302c',1,'NRF_PPI_Type']]],
+  ['chg',['CHG',['../struct_n_r_f___p_p_i___type.html#a2f326718b35b630ed41246c642f4de41',1,'NRF_PPI_Type']]],
+  ['clenr0',['CLENR0',['../struct_n_r_f___f_i_c_r___type.html#a543bf7dabd8aae999a7d405afbcd64fa',1,'NRF_FICR_Type::CLENR0()'],['../struct_n_r_f___u_i_c_r___type.html#a525ea1f50cb00593232155f8a8a5f7fa',1,'NRF_UICR_Type::CLENR0()']]],
+  ['cnfptr',['CNFPTR',['../struct_n_r_f___c_c_m___type.html#a3f8ad709ca806dcfbe2016c43d47b155',1,'NRF_CCM_Type']]],
+  ['codepagesize',['CODEPAGESIZE',['../struct_n_r_f___f_i_c_r___type.html#ac09569632c69bcb6aeaf676570155be6',1,'NRF_FICR_Type']]],
+  ['codesize',['CODESIZE',['../struct_n_r_f___f_i_c_r___type.html#aea8a0e7bddd315005d82634f713e966e',1,'NRF_FICR_Type']]],
+  ['config',['CONFIG',['../struct_n_r_f___u_a_r_t___type.html#a5a8a79667beb288367f38fb4e75afd54',1,'NRF_UART_Type::CONFIG()'],['../struct_n_r_f___s_p_i___type.html#a1254bb6ef0dfa8579e657ed339833242',1,'NRF_SPI_Type::CONFIG()'],['../struct_n_r_f___s_p_i_s___type.html#a8a3497d5199eef5a3fc0d966857ad5a6',1,'NRF_SPIS_Type::CONFIG()'],['../struct_n_r_f___g_p_i_o_t_e___type.html#a7a64a5cff4501723f4e40fe14335d755',1,'NRF_GPIOTE_Type::CONFIG()'],['../struct_n_r_f___a_d_c___type.html#a6d28e6f0953ce6ca635bf0bd83f12595',1,'NRF_ADC_Type::CONFIG()'],['../struct_n_r_f___r_n_g___type.html#ad08369e257ce3b0b9d4731d993b4669b',1,'NRF_RNG_Type::CONFIG()'],['../struct_n_r_f___w_d_t___type.html#a6bd107c91d65a40173d89fa9c36b3b49',1,'NRF_WDT_Type::CONFIG()'],['../struct_n_r_f___n_v_m_c___type.html#a10b37fa61477a3820d0642ede5b1f201',1,'NRF_NVMC_Type::CONFIG()']]],
+  ['configid',['CONFIGID',['../struct_n_r_f___f_i_c_r___type.html#a74d5c565adba5b4d0d8b4b64d44f7418',1,'NRF_FICR_Type']]],
+  ['counter',['COUNTER',['../struct_n_r_f___r_t_c___type.html#a21385db62b0f5fb972474617ca8e51e0',1,'NRF_RTC_Type']]],
+  ['cpu0',['CPU0',['../struct_a_m_l_i___r_a_m_p_r_i___type.html#a24f318f0a5da0b14195f00b01cb44e69',1,'AMLI_RAMPRI_Type']]],
+  ['crccnf',['CRCCNF',['../struct_n_r_f___r_a_d_i_o___type.html#a01a90c7f4644b9757af6db95de77387d',1,'NRF_RADIO_Type']]],
+  ['crcinit',['CRCINIT',['../struct_n_r_f___r_a_d_i_o___type.html#a53743615bbc51c77ca309c1a0ae9afaf',1,'NRF_RADIO_Type']]],
+  ['crcpoly',['CRCPOLY',['../struct_n_r_f___r_a_d_i_o___type.html#aba89d571b108ffb395dd2400271167fb',1,'NRF_RADIO_Type']]],
+  ['crcstatus',['CRCSTATUS',['../struct_n_r_f___r_a_d_i_o___type.html#a50a208350cc019763379279db218721a',1,'NRF_RADIO_Type']]],
+  ['crv',['CRV',['../struct_n_r_f___w_d_t___type.html#a7c10e34d5cbb958ddde18be79ea00e67',1,'NRF_WDT_Type']]],
+  ['ctiv',['CTIV',['../struct_n_r_f___c_l_o_c_k___type.html#a6e019201a47f4e129b9a0fab2e8338a3',1,'NRF_CLOCK_Type']]]
+];
