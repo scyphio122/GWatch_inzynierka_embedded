@@ -24,5 +24,6 @@ libraries \
 nordic/ble \
 nordic/drivers \
 nordic/libraries \
+nordic/miscellaneous \
 nordic/softdevice \
 
