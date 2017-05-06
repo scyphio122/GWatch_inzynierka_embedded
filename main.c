@@ -91,20 +91,8 @@ int main()
 	Advertising_Start();
 #endif
 
+	///	Set default timestamp to 01/01/2016 00:00:00
 	RTC_Set_Timestamp(1451606400);
-
-//	Mem_Org_Clear_Tracks_Memory();
-//	Mem_Org_Init();
-//	uint8_t buf[256] = {0};
-//	Mem_Org_Track_Start_Storage();
-//	Mem_Org_Store_Sample(0);
-//	Mem_Org_Store_Sample(128);
-//	Mem_Org_Store_Sample(255);
-//	Ext_Flash_Turn_On(EXT_FLASH_ERASE_OP);
-//	Ext_Flash_Read_Page(0x2000, buf, 256);
-//	Ext_Flash_Turn_Off();
-//	Mem_Org_Track_Stop_Storage();
-//	Mem_Org_List_Tracks_Through_BLE();
 
 	while(1)
 	{
@@ -125,14 +113,14 @@ int main()
 
 		if(disp_updt_time)
 		{
-//			ADC_Get_Bat_Voltage(&bat_voltage);
-//			Calculate_Battery_Level();
+			ADC_Get_Bat_Voltage(&bat_voltage);
+			Calculate_Battery_Level();
 
 			Display_Write_Time();
 			Display_Write_Latitude();
 			Display_Write_Longtitude();
 			Display_Update_GPS_Power_On();
-//			Display_Update_Battery_Level();
+			Display_Update_Battery_Level();
 			Display_Update_Sampling_Status(sample_stored);
 
 			Display_Flush_Buffer();
