@@ -48,7 +48,7 @@ all: GWatch.elf secondary-outputs
 GWatch.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C Linker'
-	arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections  -g3 -T "D:\Eclipse_workspace\GWatch\nordic\Softdevice_S110_HEX\armgcc_s110_nrf51422_xxaa.ld" -Xlinker --gc-sections -L"D:\Eclipse_workspace\GWatch\nordic\Softdevice_S110_HEX" -Wl,-Map,"GWatch.map" -o "GWatch.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections  -g3 -T "${PWD}/Softdevice_S110_HEX\armgcc_s110_nrf51422_xxaa.ld" -Xlinker --gc-sections -L"${PWD}/Softdevice_S110_HEX" -Wl,-Map,"GWatch.map" -o "GWatch.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
