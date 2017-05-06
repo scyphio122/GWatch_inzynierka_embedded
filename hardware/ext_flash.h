@@ -10,7 +10,7 @@
 
 
 #define EXT_FLASH_PAGE_SIZE										(uint16_t)256
-
+#define EXT_FLASH_END_ADDRESS									(uint32_t)0x800000
 #define EXT_FLASH_TURN_ON_DELAY_READ_US							(uint8_t)100
 #define EXT_FLASH_TURN_ON_DELAY_PROGRAM_ERASE_US				(uint16_t)3100
 

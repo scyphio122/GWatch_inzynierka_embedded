@@ -33,6 +33,11 @@ uint8_t	 spi_1_dynamically_allocated_buf = false;
 volatile uint8_t  spi_1_transfer_ongoing_flag;			/*< SPI 1 transfer in progress flag */
 #endif
 
+/**
+ * \brief This function starts the transaction using SPI module
+ *
+ * \param SPI - the SPI module to use
+ */
 __attribute__((optimize("O0")))
 static void  SPI_Execute_Transaction(NRF_SPI_Type* SPI)
 {
@@ -283,10 +288,10 @@ uint32_t SPI_Transfer_Blocking(NRF_SPI_Type* SPI, unsigned char* data_to_send, u
 	///	Clear (assert) the Chip Select
 	SPI_Assert_CS(cs_pin);
 
-	spi_transfer_ongoing_flag = 1;
+	spi_0_transfer_ongoing_flag = 1;
 	SPI_Execute_Transaction(SPI);
 
-	spi_transfer_ongoing_flag = 0;
+	spi_0_transfer_ongoing_flag = 0;
 	///	Deassert (set in high state) CS pin
 	SPI_Deassert_CS(cs_pin);
 

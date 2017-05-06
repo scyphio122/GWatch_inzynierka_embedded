@@ -10,6 +10,10 @@
 
 #include "stdint-gcc.h"
 #include "int_flash.h"
+#include "ext_flash.h"
+
+#define EXT_FLASH_AVAILABLE							(uint8_t)1
+
 
 typedef struct
 {
@@ -25,21 +29,38 @@ typedef struct
 	uint8_t  latitude[10];
 }mem_org_gps_sample_t;
 
-#define	MEM_ORG_KEY_AREA_START_ADDRESS				(uint32_t)0x28800
-#define MEM_ORG_KEY_AREA_END_ADDRESS				(uint32_t)0x29000
+#ifndef EXT_FLASH_AVAILABLE
+	#define	MEM_ORG_KEY_AREA_START_ADDRESS				(uint32_t)0x28800
+	#define MEM_ORG_KEY_AREA_END_ADDRESS				(uint32_t)0x29000
 
-#define MEM_ORG_KEY_AREA_KEYS_ON_PAGE				(uint8_t)(INTERNAL_FLASH_PAGE_SIZE - sizeof(mem_org_flash_page_header_t))/4
+	#define MEM_ORG_KEY_AREA_KEYS_ON_PAGE				(uint8_t)(INTERNAL_FLASH_PAGE_SIZE - sizeof(mem_org_flash_page_header_t))/4
 
-#define MEM_ORG_DATA_AREA_START_ADDRESS				MEM_ORG_KEY_AREA_END_ADDRESS
-#define MEM_ORG_DATA_AREA_END_ADDRESS				(uint32_t)0x3F800
+	#define MEM_ORG_DATA_AREA_START_ADDRESS				MEM_ORG_KEY_AREA_END_ADDRESS
+	#define MEM_ORG_DATA_AREA_END_ADDRESS				(uint32_t)0x3F800
 
-#define MEM_ORG_DATA_SAMPLES_ON_INT_FLASH_PAGE		(uint8_t)42
+	#define MEM_ORG_DATA_SAMPLES_ON_INT_FLASH_PAGE		(uint8_t)42
 
-#define MEM_ORG_KEY_ADD_SHIFT						(uint8_t)5
-#define MEM_ORG_KEY_TRACK_NUMBER_SHIFT				(uint8_t)16
+	#define MEM_ORG_KEY_ADD_SHIFT						(uint8_t)5
+	#define MEM_ORG_KEY_TRACK_NUMBER_SHIFT				(uint8_t)16
+#else
+	#define	MEM_ORG_KEY_AREA_START_ADDRESS				(uint32_t)0
+	#define MEM_ORG_KEY_AREA_END_ADDRESS				(uint32_t)0x2000
+
+	#define MEM_ORG_KEY_AREA_KEYS_ON_PAGE				(uint8_t)(EXT_FLASH_PAGE_SIZE - sizeof(mem_org_flash_page_header_t))/4
+
+	#define MEM_ORG_DATA_AREA_START_ADDRESS				MEM_ORG_KEY_AREA_END_ADDRESS
+	#define MEM_ORG_DATA_AREA_END_ADDRESS				(uint32_t)EXT_FLASH_END_ADDRESS
+
+	#define MEM_ORG_DATA_SAMPLES_ON_INT_FLASH_PAGE		(uint8_t)10
+
+	#define MEM_ORG_KEY_ADD_SHIFT						(uint8_t)5
+	#define MEM_ORG_KEY_TRACK_NUMBER_SHIFT				(uint8_t)16
+#endif
+
+
 
 extern volatile uint8_t		mem_org_track_samples_storage_enabled;
-extern uint8_t 				mem_org_gps_sample_storage_interval;
+extern uint32_t 				mem_org_gps_sample_storage_interval;
 
 uint32_t Mem_Org_Init();
 uint32_t Mem_Org_Store_Key(uint32_t address_to_data, uint16_t track_number);

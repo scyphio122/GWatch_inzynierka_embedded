@@ -388,6 +388,11 @@ static uint32_t Ble_Uart_Rx_Handler(uint8_t* p_data, uint8_t data_size)
 			Scheduler_Schedule_Task(&ble_task_fifo, request_code);
 			break;
 		}
+		case BLE_SET_STORAGE_INTERVAL:
+		{
+			memcpy(&mem_org_gps_sample_storage_interval, &p_data[1], sizeof(uint32_t));
+			break;
+		}
 		default:
 			break;
 	}
@@ -1115,15 +1120,11 @@ uint32_t Ble_Uart_Execute_Ble_Requests_If_Available()
 			case BLE_GPS_ON:
 			{
 				GPS_Turn_On();
-				Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
-				Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
 				break;
 			}
 			case BLE_GPS_OFF:
 			{
 				GPS_Turn_Off();
-				Ble_Uart_Notify_Central(0, gga_message.fix_indi, sizeof(gga_message.fix_indi), false);
-				Ble_Uart_Wait_Till_Notification_Packet_In_Progress();
 				break;
 			}
 			default:

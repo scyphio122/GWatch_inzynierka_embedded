@@ -15,11 +15,6 @@
 #define UART_TX_PIN			(uint8_t)30
 #define UART_RX_PIN			(uint8_t)0
 
-/** SPI0 MODULE **/
-#define SPI0_MISO_PIN		(uint8_t)17
-#define SPI0_MOSI_PIN		(uint8_t)16
-#define SPI0_SCK_PIN		(uint8_t)15
-
 /** DISPLAY SPI MODULE **/
 //#define SPI1_USED			(uint8_t)1
 #define DISP_MISO			(uint8_t)25
@@ -28,6 +23,13 @@
 #define DISP_CS				(uint8_t)22
 #define DISP_TOGGLE_PIN		(uint8_t)21
 #define DISP_LIGHT			(uint8_t)28
+
+/** SPI0 MODULE **/
+#define SPI0_MISO_PIN		(uint8_t)17
+#define SPI0_MOSI_PIN		(uint8_t)16
+#define SPI0_SCK_PIN		(uint8_t)15
+
+
 
 /** GPS MODULE **/
 #define GPS_3D_FIX_PIN		(uint8_t)1

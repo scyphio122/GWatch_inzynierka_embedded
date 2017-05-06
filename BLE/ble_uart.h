@@ -135,7 +135,8 @@ typedef enum
 	BLE_CLEAR_TRACK_MEMORY					= (uint8_t)11,
 	BLE_GET_SATTELITES_USED					= (uint8_t)12,
 	BLE_GPS_ON								= (uint8_t)13,
-	BLE_GPS_OFF								= (uint8_t)14
+	BLE_GPS_OFF								= (uint8_t)14,
+	BLE_SET_STORAGE_INTERVAL				= (uint8_t)15
 
 }ble_uart_commands_e;
 

@@ -12,9 +12,7 @@
 static uint8_t*		vdd_voltage;
 volatile uint8_t   	adc_conversion_in_progress = 0;
 
-/**
-*   \brief ADC End of Conversion interrupt handler. It gets the converted value and disables the ADC peripheral
-**/
+
 void ADC_IRQHandler()
 {
 	RTC_Cancel_Timeout();
@@ -27,9 +25,7 @@ void ADC_IRQHandler()
 	adc_conversion_in_progress = 0;
 }
 
-/**
-*	\brief This function is responsible for ADC module initialization. It utilizes it to measure the battery voltage. After conversion, the peripheral is disabled in its End of Conversion Interrupt Handler
-*/
+
 void ADC_Init()
 {
 	nrf_gpio_cfg_input(ADC_PIN, NRF_GPIO_PIN_NOPULL);
@@ -49,10 +45,6 @@ void ADC_Init()
 	sd_nvic_ClearPendingIRQ(ADC_IRQn);
 }
 
-/**
-*  \brief This function starts conversion of the battery voltage. The value after conversion is not calculated to units of Volt 
-*	\parem voltage_buffer - the pointer to the buffer where the converted voltage will be stored
-**/
 
 void ADC_Get_Bat_Voltage(uint8_t* buffer)
 {

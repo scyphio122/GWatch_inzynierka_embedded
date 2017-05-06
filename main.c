@@ -20,6 +20,8 @@
 #include "libraries/scheduler.h"
 #include "timer.h"
 #include "adc.h"
+#include "hardware_settings.h"
+#include "nrf_gpio.h"
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -58,7 +60,12 @@ void Periph_Config()
 	ADC_Init();
 	RTC_Schedule_IRQ(RTC_US_TO_TICKS(1000000), &NRF_RTC1->CC[2]);
 	Ext_Flash_Init();
-}
+
+	nrf_gpio_cfg_output(ACCELER_MAG_ON_PIN);
+	NRF_GPIO->OUTSET = 1 << ACCELER_MAG_ON_PIN;
+	nrf_gpio_cfg_output(ACCELER_CS_PIN);
+	NRF_GPIO->OUTSET = 1 << ACCELER_CS_PIN;
+	}
 
 void Calculate_Battery_Level()
 {
@@ -80,24 +87,17 @@ int main()
 	Scheduler_Init();
 	Mem_Org_Init();
 
-
-
-	//Display_Test();
-
-
 #ifndef NO_BLE
 	Advertising_Start();
 #endif
 
-	//GPS_Turn_On();
-
-
+	///	Set default timestamp to 01/01/2016 00:00:00
 	RTC_Set_Timestamp(1451606400);
 
 	while(1)
 	{
 		__WFE();
-		if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gga_message.fix_indi != '0') && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))
+		if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))//if(gps_message_sample_storage_time && (mem_org_track_samples_storage_enabled == 1) && (gga_message.fix_indi != '0') && (gps_sample_nr % mem_org_gps_sample_storage_interval == 0))
 		{
 			Mem_Org_Store_Sample(gps_sample_timestmap);
 			Ble_Uart_Data_Send(0xFF, NULL, 0, false);
@@ -113,8 +113,8 @@ int main()
 
 		if(disp_updt_time)
 		{
-//			ADC_Get_Bat_Voltage(&bat_voltage);
-//			Calculate_Battery_Level();
+			ADC_Get_Bat_Voltage(&bat_voltage);
+			Calculate_Battery_Level();
 
 			Display_Write_Time();
 			Display_Write_Latitude();

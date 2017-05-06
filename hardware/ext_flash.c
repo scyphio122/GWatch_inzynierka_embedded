@@ -22,7 +22,7 @@ static ext_flash_status_reg_t 	ext_flash_status_reg = {0};
 
 static void SPI_0_Init()
 {
-	nrf_gpio_cfg_input(SPI0_MISO_PIN, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(SPI0_MISO_PIN, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_output(SPI0_MOSI_PIN);
 	nrf_gpio_cfg_output(SPI0_SCK_PIN);
 
@@ -110,15 +110,14 @@ uint32_t Ext_Flash_Turn_Off()
  * \return 	NRF_SUCCESS - everything went fine
  * 			NRF_ERROR_INVALID_STATE - the flash module is powered down
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Read_Status_Reg()
 {
 	if(ext_flash_on == 0)
 		return NRF_ERROR_INVALID_STATE;
 
 	uint8_t command_code = EXT_FLASH_STATUS_REG_READ;
-
-	SPI_Transfer_Blocking(NRF_SPI0, &command_code, sizeof(command_code), (uint8_t*)&ext_flash_status_reg, sizeof(ext_flash_status_reg), EXT_FLASH_CS_PIN);
+	SPI_Transfer_Blocking(NRF_SPI0, &command_code, sizeof(command_code), &ext_flash_status_reg, sizeof(ext_flash_status_reg), EXT_FLASH_CS_PIN);//
 
 	return NRF_SUCCESS;
 }
@@ -129,7 +128,7 @@ uint32_t Ext_Flash_Read_Status_Reg()
  * \return 	NRF_SUCCESS - everything went fine
  * 			NRF_ERROR_INVALID_STATE - the flash module is powered down
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 static uint32_t Ext_Flash_Wait_Till_Ready()
 {
 	if(ext_flash_on == 0)
@@ -137,7 +136,7 @@ static uint32_t Ext_Flash_Wait_Till_Ready()
 	do
 	{
 		Ext_Flash_Read_Status_Reg();
-		RTC_Wait(RTC_US_TO_TICKS(31));
+		RTC_Wait(RTC_MS_TO_TICKS(1));
 	}while(ext_flash_status_reg.ready_or_busy != 1);
 
 	return NRF_SUCCESS;
@@ -173,7 +172,7 @@ static inline  uint32_t Ext_Flash_Check_Program_Erase_Error()
  * 			NRF_ERROR_INVALID_STATE - the flash module is powered down
  * 			NRF_ERROR_DATA_SIZE - the data exceeds outside the buffer size
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Write_Buffer(ext_flash_buffer_number_e buffer_number, uint8_t buffer_address, uint8_t* data, uint16_t data_size)
 {
 	if(ext_flash_on == 0)
@@ -221,7 +220,7 @@ uint32_t Ext_Flash_Write_Buffer(ext_flash_buffer_number_e buffer_number, uint8_t
  * \return 	NRF_ERROR_INVALID_STATE - the ext_flash_module is turned off
  * 			NRF_SUCCESS - everything went fine
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Program_Page_With_Preerase(ext_flash_buffer_number_e buf_number, uint32_t address)
 {
 	if(ext_flash_on == 0)
@@ -234,8 +233,8 @@ uint32_t Ext_Flash_Program_Page_With_Preerase(ext_flash_buffer_number_e buf_numb
 	else
 		addr[0] = EXT_FLASH_PAGE_PROG_FROM_BUF_W_PREERASE_BUF_2;
 
-	addr[1] = (uint8_t)address >> 16;
-	addr[2] = (uint8_t)address >> 8;
+	addr[1] = (uint8_t)(address >> 16);
+	addr[2] = (uint8_t)(address >> 8);
 	addr[3] = (uint8_t)address;
 
 
@@ -266,7 +265,7 @@ uint32_t Ext_Flash_Program_Page_With_Preerase(ext_flash_buffer_number_e buf_numb
  * \return 	NRF_ERROR_INVALID_STATE - the ext_flash_module is turned off
  * 			NRF_SUCCESS - everything went fine
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Program_Page_Without_Preerase(ext_flash_buffer_number_e buf_number, uint32_t address)
 {
 	if(ext_flash_on == 0)
@@ -279,8 +278,8 @@ uint32_t Ext_Flash_Program_Page_Without_Preerase(ext_flash_buffer_number_e buf_n
 	else
 		addr[0] = EXT_FLASH_PAGE_PROG_FROM_BUF_WITHOUT_PREERASE_BUF_2;
 
-	addr[1] = (uint8_t)address >> 16;
-	addr[2] = (uint8_t)address >> 8;
+	addr[1] = (uint8_t)(address >> 16);
+	addr[2] = (uint8_t)(address >> 8);
 	addr[3] = (uint8_t)address;
 
 	///	Start programming the page
@@ -305,7 +304,7 @@ uint32_t Ext_Flash_Program_Page_Without_Preerase(ext_flash_buffer_number_e buf_n
  * \param data - pointer to the buffer where data are stored
  * \param data_size - size of data to be stored
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Program_Page_Through_Buffer_W_Preerase(ext_flash_buffer_number_e buf_number, uint32_t address, uint8_t *data, uint16_t data_size)
 {
 	if(ext_flash_on == 0)
@@ -320,8 +319,8 @@ uint32_t Ext_Flash_Program_Page_Through_Buffer_W_Preerase(ext_flash_buffer_numbe
 		data_ptr[0] = EXT_FLASH_PAGE_PROG_THROUGH_BUF_W_PRERASE_BUF_2;
 
 	///	Set the address
-	data_ptr[1] = (uint8_t)address >> 16;
-	data_ptr[2] = (uint8_t)address >> 8;
+	data_ptr[1] = (uint8_t)(address >> 16);
+	data_ptr[2] = (uint8_t)(address >> 8);
 	data_ptr[3] = (uint8_t)address;
 
 	///	Copy the data
@@ -351,7 +350,7 @@ uint32_t Ext_Flash_Program_Page_Through_Buffer_W_Preerase(ext_flash_buffer_numbe
  * \param data - pointer to the buffer where data are stored
  * \param data_size - size of data to be stored
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(uint32_t address, uint8_t *data, uint16_t data_size)
 {
 	if(ext_flash_on == 0)
@@ -363,8 +362,8 @@ uint32_t Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(uint32_t address
 	data_ptr[0] = EXT_FLASH_PAGE_PROG_THROUGH_BUF_WITHOUT_PRERASE_BUF_1;
 
 	///	Set the address
-	data_ptr[1] = (uint8_t)address >> 16;
-	data_ptr[2] = (uint8_t)address >> 8;
+	data_ptr[1] = (uint8_t)(address >> 16);
+	data_ptr[2] = (uint8_t)(address >> 8);
 	data_ptr[3] = (uint8_t)address;
 
 	///	Copy the data
@@ -394,7 +393,7 @@ uint32_t Ext_Flash_Program_Page_Through_Buffer_Without_Preerase(uint32_t address
  * \param data - pointer to the buffer where data are stored
  * \param data_size - size of data to be stored
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Update_Data_On_Page(ext_flash_buffer_number_e buf_number, uint32_t address, uint8_t *data, uint16_t data_size)
 {
 	if(ext_flash_on == 0)
@@ -409,8 +408,8 @@ uint32_t Ext_Flash_Update_Data_On_Page(ext_flash_buffer_number_e buf_number, uin
 		data_ptr[0] = EXT_FLASH_PAGE_UPDATE_BUF_2;
 
 	///	Set the address
-	data_ptr[1] = (uint8_t)address >> 16;
-	data_ptr[2] = (uint8_t)address >> 8;
+	data_ptr[1] = (uint8_t)(address >> 16);
+	data_ptr[2] = (uint8_t)(address >> 8);
 	data_ptr[3] = (uint8_t)address;
 
 	///	Copy the data
@@ -436,9 +435,10 @@ uint32_t Ext_Flash_Update_Data_On_Page(ext_flash_buffer_number_e buf_number, uin
 /**
  * \brief This function erases entire external flash memory.
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Erase_Chip()
 {
+	uint32_t start_timestamp = RTC_Get_Timestamp();
 	uint32_t command = EXT_FLASH_ERASE_CHIP;
 
 	///	Wait until the flash module is ready
@@ -448,6 +448,7 @@ uint32_t Ext_Flash_Erase_Chip()
 
 	///	Wait until the flash module is ready
 	Ext_Flash_Wait_Till_Ready();
+	uint32_t end_time = RTC_Get_Timestamp();
 	///	Check if there was an error
 	uint32_t err_code = Ext_Flash_Check_Program_Erase_Error();
 
@@ -462,7 +463,7 @@ uint32_t Ext_Flash_Erase_Chip()
  *
  * \param sector_number - enum encoding sector number
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Erase_Sector(ext_flash_sector_numbers_e sector_number)
 {
 	uint8_t spi_command[4] = {0};
@@ -476,8 +477,8 @@ uint32_t Ext_Flash_Erase_Sector(ext_flash_sector_numbers_e sector_number)
 		sector_num = ((uint32_t)sector_number) << 18;
 
 	spi_command[0] = EXT_FLASH_ERASE_SECTOR;
-	spi_command[1] = (uint8_t)sector_num >> 16;
-	spi_command[2] = (uint8_t)sector_num >> 8;
+	spi_command[1] = (uint8_t)(sector_num >> 16);
+	spi_command[2] = (uint8_t)(sector_num >> 8);
 	spi_command[3] = (uint8_t)sector_num;
 
 	///	Wait until the flash module is ready
@@ -501,16 +502,16 @@ uint32_t Ext_Flash_Erase_Sector(ext_flash_sector_numbers_e sector_number)
  *
  * \param block_number - the block number, starting from 0
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Erase_Block(uint16_t block_number)
 {
 	uint8_t spi_command[4] = {0};
 	uint32_t spi_message = block_number << 11;
 
 	spi_command[0] = EXT_FLASH_ERASE_BLOCK_8_PAGES;
-	spi_command[1] = (uint8_t)spi_message >> 16;
-	spi_command[2] = (uint8_t)spi_message >> 8;
-	spi_command[3] = (uint8_t)spi_message;
+	spi_command[1] = (uint8_t)(spi_message >> 16);
+	spi_command[2] = (uint8_t)(spi_message >> 8);
+	spi_command[3] = (uint8_t)(spi_message);
 
 	///	Wait until the flash module is ready
 	Ext_Flash_Wait_Till_Ready();
@@ -534,15 +535,15 @@ uint32_t Ext_Flash_Erase_Block(uint16_t block_number)
  *
  * \address - the address within the flash page
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Erase_Page(uint32_t address)
 {
 	uint8_t spi_command[4];
 
 	address = address - (address%256) + 1;
 	spi_command[0] = EXT_FLASH_ERASE_PAGE;
-	spi_command[1] = (uint8_t)address >> 16;
-	spi_command[2] = (uint8_t)address >> 8;
+	spi_command[1] = (uint8_t)(address >> 16);
+	spi_command[2] = (uint8_t)(address >> 8);
 	spi_command[3] = (uint8_t)address;
 
 	///	Wait until the flash module is ready
@@ -571,7 +572,7 @@ uint32_t Ext_Flash_Erase_Page(uint32_t address)
  * \return	NRF_SUCCESS - everything went fine
  * 			NRF_ERROR_DATA_SIZE - the user tries to read too much data from the page
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Read_Page(uint32_t address, uint8_t* data_buf, uint16_t data_size)
 {
 	if(((address%EXT_FLASH_PAGE_SIZE) + data_size) > EXT_FLASH_PAGE_SIZE)
@@ -580,8 +581,8 @@ uint32_t Ext_Flash_Read_Page(uint32_t address, uint8_t* data_buf, uint16_t data_
 	uint8_t spi_command[8] = {0};
 
 	spi_command[0] = EXT_FLASH_READ_PAGE;
-	spi_command[1] = (uint8_t)address >> 16;
-	spi_command[2] = (uint8_t)address >> 8;
+	spi_command[1] = (uint8_t)(address >> 16);
+	spi_command[2] = (uint8_t)(address >> 8);
 	spi_command[3] = (uint8_t)address;
 
 	///	Wait until the flash module is ready
@@ -602,14 +603,14 @@ uint32_t Ext_Flash_Read_Page(uint32_t address, uint8_t* data_buf, uint16_t data_
  *
  * \return	NRF_SUCCESS - everything went fine
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Read_Continuous(uint32_t address, uint8_t* data_buf, uint16_t data_size)
 {
 	uint8_t spi_command[8] = {0};
 
 	spi_command[0] = EXT_FLASH_CONTINUOUS_READ;
-	spi_command[1] = (uint8_t)address >> 16;
-	spi_command[2] = (uint8_t)address >> 8;
+	spi_command[1] = (uint8_t)(address >> 16);
+	spi_command[2] = (uint8_t)(address >> 8);
 	spi_command[3] = (uint8_t)address;
 
 	///	Wait until the flash module is ready
@@ -632,7 +633,7 @@ uint32_t Ext_Flash_Read_Continuous(uint32_t address, uint8_t* data_buf, uint16_t
  * \param data_buf - buffer for the data
  * \param data_size - size of data to be read
  */
-__attribute__((optimize("O2")))
+//__attribute__((optimize("O2")))
 uint32_t Ext_Flash_Read_Buffer(uint8_t buf_read_command, uint8_t buffer_address, uint8_t* data_buf, uint16_t data_size)
 {
 	uint8_t* spi_command;
