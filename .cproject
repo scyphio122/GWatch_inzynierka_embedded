@@ -40,7 +40,7 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash.1221962050" name="Create flash image" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createflash" value="true" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize.763872729" name="Print size" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.printsize" value="true" valueType="boolean"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.448200914" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
-							<builder buildPath="${workspace_loc:/GWatch}/Debug" id="ilg.gnuarmeclipse.managedbuild.cross.builder.816050168" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+							<builder buildPath="${workspace_loc:/GWatch}/Debug" id="ilg.gnuarmeclipse.managedbuild.cross.builder.816050168" keepEnvironmentInBuildfile="true" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.21209807" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.878879060" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.1622105492" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" valueType="definedSymbols">
@@ -52,26 +52,15 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.338009083" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.813670878" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/miscellaneous/CMSIS&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/miscellaneous&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/CMSIS&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/hardware&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/libraries&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/ble&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/drivers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/nordic/softdevice&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Drivers&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/SoftDevice_common&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_BLE&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/Softdevice_S110&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Boards&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries/3.0.1/util&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries/3.0.1/fifo&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries/3.0.1/trace&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries/3.0.1/timer&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries/3.0.1/scheduler&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/nRF_Libraries/3.0.1/crc16&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/ble&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/DEVICE&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/libraries&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.2088571320" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
@@ -87,11 +76,10 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.1209429439" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections.1506167207" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.gcsections" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.925139832" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/Softdevice_S110&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/nordic/Softdevice_S110_HEX}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile.586221111" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.scriptfile" valueType="stringList">
-									<listOptionValue builtIn="false" value="&quot;${NORDIC_SDK_PATH}/Softdevice_S110/armgcc_s110_nrf51422_xxaa.ld&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/nordic/Softdevice_S110_HEX/armgcc_s110_nrf51422_xxaa.ld}&quot;"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input.1736089770" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -362,10 +350,10 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration configurationName="Debug">
+		<configuration configurationName="Default">
 			<resource resourceType="PROJECT" workspacePath="/GWatch"/>
 		</configuration>
-		<configuration configurationName="Release">
+		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/GWatch"/>
 		</configuration>
 	</storageModule>
@@ -374,9 +362,6 @@
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="0.567154590">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="0.567154590;0.567154590.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1271968765;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.85213976">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="0.567154590;0.567154590.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1870095791;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1015070013">

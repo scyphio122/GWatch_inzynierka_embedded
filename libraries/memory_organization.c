@@ -6,7 +6,7 @@
  */
 
 
-#include <ble_uart.h>
+#include <BLE/ble_uart.h>
 #include <GPS.h>
 #include <libraries/memory_organization.h>
 #include <nrf_error.h>
